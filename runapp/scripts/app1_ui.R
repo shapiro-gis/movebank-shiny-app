@@ -148,10 +148,7 @@ app1_init<-function(input,output,session){
     layername = unique(importedDatasetMaster$studyname)
     
     output_shapefile <- normalizePath(file.path(MovebankFolder(), paste0(layername, ".shp")))
-    
-    #output_shapefile <- file.path(MovebankFolder(), layername,".shp")
-    print(output_shapefile)
-    writeOGR(importedDatasetMaster, dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
+        writeOGR(importedDatasetMaster, dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
    w$hide()
      removeModal()
     updateTabsetPanel(session, "navibar",selected = "mapviewer")
@@ -173,9 +170,18 @@ app1_init<-function(input,output,session){
       configOptions$mortTime<<-input$mortTime
       saveConfig()
   },ignoreInit=TRUE)
-
+  
+  wc <- Waiter$new(
+    html = tagList(
+      spin_3(),
+      h4("Calculating movement parameters...", style = "color: grey") # Add style attribute to h4 element
+    ),
+    color = transparent(.5)
+  )
   observeEvent(input$calcMoveParamsButton,{
+    wc$show()
       findProblemPoints()
+      wc$hide()
   },ignoreInit=TRUE)
 
 

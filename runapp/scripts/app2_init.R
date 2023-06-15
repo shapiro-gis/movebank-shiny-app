@@ -641,6 +641,18 @@ observeEvent({input$BioDistricts},{
   }
 })
 
+
+
+
+
+
+  ##------------------- Export queried data
+  
+  
+  
+  
+  
+
   observeEvent(input$exportQuery,{
     showModal(modalDialog(
       title="Export queried data to a shapefile",
@@ -657,7 +669,7 @@ observeEvent({input$BioDistricts},{
       footer = tagList(
         actionButton("exportSample","Export Sampled Points"),
         actionButton("exportLines","Export Lines"),
-        actionButton("exportHomeRange","Export Home Range"),
+       # actionButton("exportHomeRange","Export Home Range"),
         
         modalButton("Cancel")
       )
@@ -694,48 +706,162 @@ observeEvent({input$BioDistricts},{
     shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile ), type = "success")
     
   }) 
+  
+  
+  
+  
+  
+  
+#-------------------- Home Range Calucation buttons
+    
+    
+    
+  observeEvent(input$exportCalcRange,{
+    showModal(modalDialog(
+      title="Calculate Home ranges",
+
+      actionButton("runMCP", "Run MCP"),
+      " ",
+      HTML("<strong>MCP:</strong> Create Minimum Convex Polygon(MCP) of the movement data. These are the simplest defined areas; polygons defined by the outside extent of the data points."),
+      
+      br(),
+      br(),
+      
+      
+      actionButton("runKDE", "Run KDE"),
+      " ",
+      HTML("<strong>KDE:</strong> Create kernel density estimates to measure home ranges of the movement data. This uses contour lines to measure home ranges with kernels. "),
+      
+      br(),
+      br(),
+      
+      actionButton("runLineBuffer", "Run Line Buffer"),
+      " ",
+      "Line Buffer: Explanation of Line Buffer button",
+      
+      footer = tagList(
+        modalButton("Cancel")
+      )
+    ))
+    
+  })
+  
+  
+    
+    
   kernlUD <- function(data){
     data$datetest <- as.POSIXct(data$datetest, tz = "MST", format = "%Y-%m-%d %H:%M:%S")
     datapoints<-SpatialPoints(cbind(data$lon,data$lat))
     
-    #MCP
-    datapoints.mcp <- mcp(datapoints, percent = 100)
-    plot(datapoints.mcp)
-    
     #KDE
-    kud <- kernelUD(datapoints, h=0.2) #kernel density utilization distribution (h=smoothing factor)
-    plot(kud)
-    
+    kud <- kernelUD(datapoints,h = "href") #kernel density utilization distribution (h=smoothing factor)
+    image(kud)
+    homerange99 <- getverticeshr(kud, percent=99) #convert into vector object, use 75,50,25 for quartic kernel
+    homerange95 <- getverticeshr(kud, percent=95) #convert into vector object, use 75,50,25 for quartic kernel
+    homerange90 <- getverticeshr(kud, percent=90) #convert into vector object, use 75,50,25 for quartic kernel
     homerange75 <- getverticeshr(kud, percent=75) #convert into vector object, use 75,50,25 for quartic kernel
+    homerange50 <- getverticeshr(kud, percent=50) #convert into vector object, use 75,50,25 for quartic kernel
+    homerange25 <- getverticeshr(kud, percent=25) #convert into vector object, use 75,50,25 for quartic kernel
     
-    # set coordinates and write to shapfile which can be projected in ArcGIS
+    combined_vertices <- rbind(homerange99,homerange95, homerange90,homerange75,homerange50,homerange25)
+    print(combined_vertices)
+    output$plotKUD <- renderLeaflet({
+      leaflet(combined_vertices) %>%
+        addTiles() %>%
+        addPolygons(fillColor = "red", weight = 2)
+    })
     
-    WGScoor<-  homerange75
-    proj4string(WGScoor)<- CRS("+proj=longlat +datum=WGS84")
-    raster::shapefile(WGScoor, "T:\\Shared drives\\DNR_DWR_GIS_WMI\\MigrationMapping\\DataRequest\\LOA\\homerange50_new.shp")
+    kde_result(combined_vertices)  # Store MCP result in reactive value
     
-    coordinates(data) <- ~ lon + lat
-    ltraj <- as.ltraj(xy= coordinates(data),date=data$datetest,id=data$newuid, typeII=TRUE)
+    #proj4string(WGScoor)<- CRS("+proj=longlat +datum=WGS84")
 
-# Compute the kernel density estimation
-    #ud <- kernelUD(ltraj, h = "href")
-
-    # hr_95 <- getverticeshr(ud, percent = 0.95)
-    # plot(hr_95)
-    # # 50% contour home range
-    # hr_50 <- getverticeshr(ud, percent = 0.5)
-    # plot(hr_50)
+    #coordinates(data) <- ~ lon + lat
+    #ltraj <- as.ltraj(xy= coordinates(data),date=data$datetest,id=data$newuid, typeII=TRUE)
   }
-  observeEvent(input$exportHomeRange,{
+  
+  kde_result <- reactiveVal() 
+  observeEvent(input$runKDE,{
     data <- movebankFilter()
     kernlUD(data)
-    #layername = input$fileNameQuery
-    #output_shapefile <- normalizePath(file.path(exportQuery(), paste0(layername, ".shp")))
-    #writeOGR(lines_spatial, dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
+    showModal(modalDialog(
+      title="Kernel Density Estimates",
+      leafletOutput("plotKUD"),
+      textInput('kdeFileName', 'Please provide a name for your shapefile', 
+                value = ""),
+      footer = tagList(
+        actionButton("exportKDE","Export KDE"),
+        
+        modalButton("Cancel")
+      )
+    ))
+
+  }) 
+  
+  observeEvent(input$exportKDE,{
+    kdeResult<- kde_result()
     
-    #shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile ), type = "success")
+    layername = input$kdeFileName
+    output_shapefile <- normalizePath(file.path(exportQuery(), paste0(layername, ".shp")))
+    writeOGR( kdeResult , dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
+    shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile ), type = "success")
     
   }) 
+  
+  mcp_result <- reactiveVal()  # Reactive value to store MCP result
+  
+
+  calculateMCP <- function(data){
+    datapoints<-SpatialPoints(cbind(data$lon,data$lat))
+
+    #MCP
+    datapoints.mcp <- mcp(datapoints, percent = 95)
+    output$plotMCP <- renderLeaflet({
+      leaflet(datapoints.mcp) %>%
+        addTiles() %>%
+        addPolygons(fillColor = "red", weight = 2)
+    })
+    mcp_result(datapoints.mcp)  # Store MCP result in reactive value
+  }
+  
+  observeEvent(input$runMCP,{
+    data <- movebankFilter()
+    calculateMCP(data)
+    showModal(modalDialog(
+      title="MCP 95%",
+      use_bs_popover(),
+     leafletOutput("plotMCP"),
+      textInput('mcpFileName', 'Please provide a name for your shapefile', 
+                value = ""),
+      footer = tagList(
+        actionButton("exportMCP","Export MCP"),
+        
+        modalButton("Cancel")
+      )
+    ))
+
+  })
+  
+  
+  observeEvent(input$exportMCP,{
+     mcpResult<- mcp_result()
+    
+    layername = input$mcpFileName
+    output_shapefile <- normalizePath(file.path(exportQuery(), paste0(layername, ".shp")))
+    print(output_shapefile)
+    writeOGR( mcpResult , dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
+    shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile ), type = "success")
+    
+  }) 
+  
+  # bbmm <- function(){
+  #   X	= "lon" #	The	column	name	of	your	x	coordinate
+  #   Y	= "lat" #	The	column	name	of	your	y	coordinate
+  #   loc.error	= 20
+  #   maxlag	= 60
+  #   levels	= c(95)
+  #   cell.size	= 50 #	change	to	NULL	if	area.grid	is	used
+  #   grid	= NULL #	if	area.grid is	created	Null	status	will	be	removed
+  # }
   
 
 

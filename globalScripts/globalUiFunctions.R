@@ -89,19 +89,10 @@ saveSessionInfo<<-function(){
   saveRDS(sessionInfo,saveTo)
 }
 
- saveShapefile<<-function(){
- #  rdsLocation<-paste0(filePath, "//MovebankData")
-  #savefile<<-readRDS(rdsLocation)
-  #print("Export Shapefile to:", rdsLocation)
-  print(masterWorkingDirectory)
-  
-  #savefile<- savefile$importedDatasetMaster
-  writeOGR(savefile, ".", layer="test441", driver="ESRI Shapefile")
- }
  
 MovebankFolder<<- function(){
   app_dir <- normalizePath(file.path(masterWorkingDirectory, ".."), winslash = "/")
-  app_dir<-paste0(app_dir,'/Movebank/')
+  app_dir<-paste0(app_dir,'/movebank/')
   print(app_dir)
 }
 

@@ -5,7 +5,7 @@ gc()
 options(warn=-1)
 
 list.of.packages<-c("shiny", "waiter", "mapdeck","dplyr","adehabitatHR","shinythemes","shinyWidgets","mapboxer",
-     "sf","rgdal", "httr","shinyBS","RSQLite","move","shinycssloaders","raster","shinyjs", "data.table",
+     "sf","rgdal", "httr","shinyBS","RSQLite","move","shinycssloaders","raster","shinyjs", "data.table", "leaflet",
      "bsplus","RColorBrewer", "bslib","furrr")
 
 #checking missing packages from list
@@ -352,8 +352,12 @@ tabPanel( "Data Cleaning",value = "app1",
                                    uiOutput("selectedShapefileLabel")
                             ),
                             column(12,
-                                   tableOutput("aidConfigTable")
-                            )
+                                   tags$div(
+                                     style = "max-height: 300px; max-width: 1000px; overflow: auto;",
+                                     
+                                     #style = "max-height: 500px; overflow-y: scroll;",
+                                     tableOutput("aidConfigTable")
+                                   )                            )
                      )
            )),
          hidden(
@@ -376,7 +380,12 @@ tabPanel( "Data Cleaning",value = "app1",
                             actionButton("doneChoosingDateColumnsButton", "DONE SELECTING DATE COLUMN(S).")
                      ),
                      column(8,align="right",
-                            tableOutput("dateConfigTable1")
+                            tags$div(
+                              style = "max-height: 300px; max-width: 1200px; overflow: auto;",
+                              
+                              #style = "max-height: 500px; overflow-y: scroll;",
+                              tableOutput("dateConfigTable1")
+                            )        
                      )
            )
          ),
@@ -730,6 +739,8 @@ tabPanel(#icon = icon("new-window", lib =  "glyphicon"),
                                    # actionButton("heatMap",("Heat Map")),
                                     br(),
                                     actionButton("exportQuery",("Download Query Results")),
+                                    actionButton("exportCalcRange","Calculate Home Range"),
+                                   
                                     
                            ))
              ),
@@ -805,7 +816,7 @@ server <- function(input, output, session) {
     if (input$navibar == "app1" && !app1_initialized()) {
       app1_init(input, output, session)
       
-      elevation <<- raster("globalDem/etopocompressed.tif")
+      elevation<<- raster("/vsicurl/https://pathfinder.arcc.uwyo.edu/devise/MerkleLabGIS/Topo/etopocompressed.tif")
       
       checkForSession('app1')
       hide(id = 'dateTimeRow')

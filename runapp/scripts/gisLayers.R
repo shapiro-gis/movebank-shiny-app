@@ -19,6 +19,7 @@ load_geojson <- function(urls) {
     st_read(geojson, quiet = TRUE)
   })
   
+ 
   return(sf_list)
 }
 

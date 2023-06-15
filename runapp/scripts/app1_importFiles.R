@@ -45,7 +45,7 @@ importShapefile<-function(fileToImport,lastOne,i){
   
   importedDataset <<- tryCatch({
     fileImportTracker[[fileToImport]]<<-"inProgress"
-   # progressIndicator(paste('Importing ',fileToImport,' Please wait',sep=""),'start')
+    # progressIndicator(paste('Importing ',fileToImport,' Please wait',sep=""),'start')
     sf::as_Spatial(sf::st_read(paste0(dataFolder,'\\',fileToImport,'.shp')))
   },
   error = function(cond) {
@@ -181,46 +181,52 @@ showWorkingDirectorySelect<-function(){
   
   
   observeEvent(input$chooseWorkingDirButton, {
-    masterWorkingDirectory <<- NULL
+    masterWorkingDirectory<<-NULL
     
     shinyjs::disable("chooseWorkingDirButton")
     
-    masterWorkingDirectory <<- choose.dir(dataFolder)
+    masterWorkingDirectory<<-choose.dir(dataFolder)
     
-    if (is.na(masterWorkingDirectory) | is.null(masterWorkingDirectory)) {
+    if(is.na(masterWorkingDirectory) | is.null(masterWorkingDirectory)){
       shinyjs::enable("chooseWorkingDirButton")
       return()
     }
     
-    if (!dir.exists(masterWorkingDirectory)) {
-      modalMessager('error', 'Please try selecting this folder again')
+    if(!dir.exists(masterWorkingDirectory)){
+      modalMessager('error','Please try selecting this folder again')
       shinyjs::enable("chooseWorkingDirButton")
       return()
     }
     
-    files <- list.files(masterWorkingDirectory)
     
-    if (length(files) > 0) {
-      modalMessager('error', 'The folder you chose is not empty. This will cause errors in analysis. Please empty the folder or choose a different directory and try again.')
+    
+    
+    files<-list.files(masterWorkingDirectory)
+    
+    if(length(files)>0){
+      modalMessager('error','The folder you chose is not empty.
+        This will cause errors in analysis. Please empty the folder or
+        choose a different directory and try again.')
       shinyjs::enable("chooseWorkingDirButton")
-      masterWorkingDirectory <<- NULL
+      masterWorkingDirectory<<-NULL
       return()
     }
     
-    configOptions$masterWorkingDirectory <<- masterWorkingDirectory
+    configOptions$masterWorkingDirectory<<-masterWorkingDirectory
     saveConfig()
     
-    output$selectedWorkingDirectoryLabel <- renderUI({
-      strong(paste0('Your data will be exported to: ', masterWorkingDirectory))
+    
+    output$selectedWorkingDirectoryLabel<-renderUI({
+      strong(paste0('Your data will be exported to: ',masterWorkingDirectory))
     })
     
-    output$selectedWorkingDirectoryLabel <- renderUI({
-      HTML(paste0('<strong>', masterWorkingDirectory, '</strong>'))
+    
+    output$selectedWorkingDirectoryLabel<-renderUI({
+      HTML(paste0('<strong>',masterWorkingDirectory,'</strong>'))
     })
     
     showColumnChoiceInfo()
     shinyjs::enable("chooseWorkingDirButton")
-    
   },ignoreInit=TRUE)
   
 }
@@ -240,7 +246,7 @@ showColumnChoiceInfo<-function(){
   }else{
     columnNames<-names(importedDatasetMaster@data)
     importedDatasetMaster@data['comments']<<-''
-
+    
     rowsToShow<-importedDatasetMaster[1:20,]
   }
   
@@ -297,12 +303,12 @@ showColumnChoiceInfo<-function(){
   observeEvent(input$addStudyBtn, {
     removeModal()
   })
-
+  
   # 
   #
   observeEvent(input$studynameSelector, {
     selectedstudyField <- input$studynameSelector
-
+    
     if (selectedstudyField == "NaN") {
       showModal(modalDialog(
         title = "Missing Field Value",
@@ -325,16 +331,16 @@ showColumnChoiceInfo<-function(){
     }
     
   })
-
-
+  
+  
   
   
   
   observeEvent(input$uniqueIdSelectorGo, {
-    if (is.null(masterWorkingDirectory)) {
-      modalMessager('Error', 'You need to select an empty working directory to continue')
-      return()
-    }
+    # if (is.null(masterWorkingDirectory)) {
+    #   modalMessager('Error', 'You need to select an empty working directory to continue')
+    #   return()
+    # }
     
     if (!exists('importedDatasetMaster')) {
       mergeShapfilesHandler()
@@ -402,40 +408,33 @@ testImport<<-function(){
   }
 }
 
-
+w <- Waiter$new(
+  html = tagList(
+    spin_3(),
+    h4("Downloading Movebank data... please be patient... depending on file size, this can take a while.", style = "color: grey") # Add style attribute to h4 element
+  ),
+  color = transparent(.5)
+)
 downloadMovebankData <- function(user, pw, movebankId) {
   show('downloadSpinner')
+  
   storedLogin <- movebankLogin('username' = user, 'password' = pw)
-  loadingScreenToggle('show', 'downloading movebank data.. please be patient.. depending on file size, this can take a while.')
   
-  withCallingHandlers({
-    movebankData <- getMovebankData(as.numeric(movebankId), 'login' = storedLogin, removeDuplicatedTimestamps = TRUE)
-    print("Processing Data")
-    print(movebankData)
-    processMovebankData(movebankData)
-  },
-  warning = function(w) {
-    print("returned a warning")
-    modalMessager('movebank warning', w$message)
-    loadingScreenToggle('hide', 'downloading movebank data.. please be patient.. depending on file size, this can take a while.')
-  },
-  error = function(e) {
-    print("Returned an error")
-    modalMessager('movebank error', e$message)
-    loadingScreenToggle('hide', 'downloading movebank data.. please be patient.. depending on file size, this can take a while.')
+  w$show()
+  
+  movebankData <- tryCatch({
+    execute_safely(getMovebankData(as.numeric(movebankId), 'login' = storedLogin, removeDuplicatedTimestamps = TRUE))
   })
-
-  if(!is.null(movebankData)){
-    print("Processing Data")
-    print(movebankData)
-    processMovebankData(movebankData)
-    
-   # processMovebankData(data.frame(movebankData))
-
-  }
-
+  w$hide()
   
+  if (!is.null(movebankData)) {
+   # loadingScreenToggle('show', 'downloading movebank data.. please be patient.. depending on file size, this can take a while.')
+    
+    processMovebankData(movebankData)
+    # processMovebankData(data.frame(movebankData))
+  }
 }
+
 
 processMovebankData<-function(movebankData){
   
@@ -474,11 +473,6 @@ processMovebankData<-function(movebankData){
     movebankData <- movebankData %>% rename(location_lat_new = location_lat)
   }
   
-  # if ('location_lat.1' %in% theseDataNames) {
-  #   thisLatField <- 'location_lat.1'
-  #   movebankData <- movebankData %>% rename(location_lat_new = location_lat.1)
-  # }
-  
   
   movebankData <- movebankData %>%
     filter(location_lat_new         >= -90) %>%
@@ -491,21 +485,8 @@ processMovebankData<-function(movebankData){
     proj4string = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0")
   )
   
-
   
-  # if('location_lat'%in%theseDataNames){
-  #   movebankData <- movebankData[location_lat >= -90]
-  # }
-  # 
-  # if('location_long'%in%theseDataNames){
-  #   movebankData <- movebankData[location_long >= -180]
- # }
-  # if('location_long.1'%in%theseDataNames){
-  #   movebankData <- movebankData[location_long.1 >= -180]
-  # }
-  # if('location_lat.1'%in%theseDataNames){
-  #   movebankData <- movebankData[location_lat.1 >= -90]
-  # }
+
   print(movebankData)
   importedDatasetMaster@data[["lon"]]<<-as.numeric(importedDatasetMaster@data[,'location_long_new'])
   importedDatasetMaster@data[["lat"]]<<-as.numeric(importedDatasetMaster@data[,'location_lat_new'])
