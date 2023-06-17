@@ -34,7 +34,7 @@ combineprojects <- function(MuleDeerHerdUnits, AntelopeHerdUnits, inputShapefile
     sf_object <- st_transform(sf_object, "+init=EPSG:4326")
     names(sf_object) <- tolower(names(sf_object))
     sf_object <- sf_object[, c("newuid", "species", "studyname", "lat", "lon", "datetest", "problem", "mortality", "dt", "dist", "burst", "speed", "id_yr", "nsdoverall")]
-    
+    sf_object$newuid <- as.character(sf_object$newuid)
     ids <- unique(sf_object$species)
     for (id in ids) {
       if (!is.na(id) && startsWith(id, "Antilo")) {

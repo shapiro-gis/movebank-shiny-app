@@ -1,15 +1,3 @@
-
-#Get path to GIS data
-pathGIS<<- function(){
-  wd<- getwd()
-  #masterWorkingDirectory<- sessionInfo$masterWorkingDirectory
-  
-  app_dir <- normalizePath(file.path(wd, ".."), winslash = "/")
-  app_dir<-paste0(app_dir,'//GIS//')
-  print(app_dir)
-}
-
-
 load_geojson <- function(urls) {
   plan(multisession)  # Use multiple parallel sessions
   
@@ -81,15 +69,3 @@ merge_polygons <- function(MuleDeerCrucialRange, MuleDeerHerdUnits, MuleDeerSeas
 }
 
 
-
-
-
-add_or_remove_layer <- function(layer_id, data, map_id, add = TRUE) {
-  if (add) {
-    mapdeck_update(map_id) %>%
-      add_polygon(data = data, layer_id = layer_id, update_view = FALSE)
-  } else {
-    mapdeck_update(map_id) %>%
-      clear_polygon(layer_id = layer_id)
-  }
-}

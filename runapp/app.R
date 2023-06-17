@@ -6,7 +6,7 @@ options(warn=-1)
 
 list.of.packages<-c("shiny", "waiter", "mapdeck","dplyr","adehabitatHR","shinythemes","shinyWidgets","mapboxer",
      "sf","rgdal", "httr","shinyBS","RSQLite","move","shinycssloaders","raster","shinyjs", "data.table", "leaflet",
-     "bsplus","RColorBrewer", "bslib","furrr")
+     "bsplus","RColorBrewer", "bslib","furrr", "shinyalert", "ggplot2")
 
 #checking missing packages from list
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
@@ -17,7 +17,7 @@ if(length(new.packages)) install.packages(new.packages, dependencies = TRUE)
 lapply(list.of.packages, require, character.only = TRUE)
 
 
-# 
+# Read in scripts
 source("scripts/movebankData.R",local=TRUE)
 source("scripts/animalinfo.R",local=TRUE)
 source("scripts/gisLayers.R",local=TRUE)
@@ -48,8 +48,6 @@ source("scripts/find.problem.pts.R",local=TRUE)
 source("scripts/mov.param.R",local=TRUE)
 source("scripts/mort.check.R",local=TRUE)
 
-library(mapdeck)
-library(here)
 
 dependencies<-c("shiny","sf","mapdeck", "circular","shinyjs","shinyBS","sp","ggplot2","mapboxer","rgdal","adehabitatHR",'RSQLite','move','shinycssloaders','raster','terra','R.utils','waiter', 'shinythemes','shinyWidgets')
 loadDependencies(dependencies)
@@ -440,19 +438,6 @@ tabPanel( "Data Cleaning",value = "app1",
          ),
 hidden(
   fluidRow( id="importedDataMapRow",
-            # tags$head(
-            #   includeCSS("styles.css")
-            # ),
-            
- # mapboxerOutput('importedDataMapBox', width = "100%",height='60vh'),
-  
-  # tags$head(tags$style(HTML('
-  #     .modal-lg {
-  #     position: absolute !important;
-  #     right:10px !important;
-  #     width:40% !important;
-  #     }
-  #   '))),
     tags$head(tags$script(src="js/mapboxer.js")),
     tags$head(tags$script(src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.2.2/mapbox-gl-draw.js")),
     tags$link(rel = "stylesheet", type = "text/css", href = "https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.2.2/mapbox-gl-draw.css"),
@@ -493,16 +478,6 @@ hidden(
 # uiOutput('polygonHolder'),
 div(class = "outer",
     
-  #   tags$head(tags$style(HTML("
-  #   body, html {
-  #     height: 100%;
-  #   }
-  #   
-  #   #importedDataMapBox {
-  #     height: 100%;
-  #     overflow: hidden;
-  #   }
-  # "))),
     
   mapboxerOutput('importedDataMapBox', width = "100%", height = "105vh"),
   
@@ -721,7 +696,6 @@ tabPanel(#icon = icon("new-window", lib =  "glyphicon"),
                                     ),
                            ),
                            tabPanel("Results", id = "Results",
-                                    # uiOutput(outputId = "info_animals"),
                                     br(),
                                     div(style = "height: 300px; overflow-y: scroll;",
                                         h5("Species Summary"),

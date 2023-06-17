@@ -1,5 +1,4 @@
-library(waiter)
-library(shinyalert)
+
 app2_init<-function(input,output,session){
   ###APp 2
   observe({
@@ -197,7 +196,6 @@ app2_init<-function(input,output,session){
     req(movebankData())
     data<- movebankData()
     data<- locationViewer(data)
-    print(mapzoom)
     mapdeck_update(map_id = "myMap") %>%
       add_scatterplot(
         data = data,
@@ -684,9 +682,7 @@ observeEvent({input$BioDistricts},{
     spdf <- SpatialPointsDataFrame(coords, data, proj4string = CRS("+proj=longlat +datum=WGS84"))
 
     layername = input$fileNameQuery
-    print(layername)
     output_shapefile <- normalizePath(file.path(exportQuery(), paste0(layername, ".shp")))
-    print(output_shapefile)
     writeOGR(spdf, dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
     
    # writeOGR(spdf, exportQuery(), ".", layer = input$fileName, driver = "ESRI Shapefile", overwrite_layer = TRUE)
@@ -718,27 +714,28 @@ observeEvent({input$BioDistricts},{
     
   observeEvent(input$exportCalcRange,{
     showModal(modalDialog(
-      title="Calculate Home ranges",
-
-      actionButton("runMCP", "Run MCP"),
-      " ",
+      title="Calculate Home Ranges",
       HTML("<strong>MCP:</strong> Create Minimum Convex Polygon(MCP) of the movement data. These are the simplest defined areas; polygons defined by the outside extent of the data points."),
       
+      actionButton("runMCP", "Run MCP"),
+      " ",
+   
       br(),
       br(),
       
+      HTML("<strong>KDE:</strong> Create kernel density estimates to measure home ranges of the movement data. This uses contour lines to measure home ranges with kernels. "),
       
       actionButton("runKDE", "Run KDE"),
       " ",
-      HTML("<strong>KDE:</strong> Create kernel density estimates to measure home ranges of the movement data. This uses contour lines to measure home ranges with kernels. "),
       
       br(),
       br(),
-      
+      HTML("<strong>Line Buffer:</strong> Create line buffers of individual animals based on their steps."),
+      fluidRow(
       actionButton("runLineBuffer", "Run Line Buffer"),
       " ",
-      "Line Buffer: Explanation of Line Buffer button",
-      
+      numericInput(inputId = "bufferSize", label = "Input Buffer Size", 
+                   value = 300)),
       footer = tagList(
         modalButton("Cancel")
       )
@@ -764,7 +761,6 @@ observeEvent({input$BioDistricts},{
     homerange25 <- getverticeshr(kud, percent=25) #convert into vector object, use 75,50,25 for quartic kernel
     
     combined_vertices <- rbind(homerange99,homerange95, homerange90,homerange75,homerange50,homerange25)
-    print(combined_vertices)
     output$plotKUD <- renderLeaflet({
       leaflet(combined_vertices) %>%
         addTiles() %>%
@@ -780,6 +776,7 @@ observeEvent({input$BioDistricts},{
   }
   
   kde_result <- reactiveVal() 
+  
   observeEvent(input$runKDE,{
     data <- movebankFilter()
     kernlUD(data)
@@ -841,30 +838,110 @@ observeEvent({input$BioDistricts},{
 
   })
   
-  
   observeEvent(input$exportMCP,{
      mcpResult<- mcp_result()
     
     layername = input$mcpFileName
     output_shapefile <- normalizePath(file.path(exportQuery(), paste0(layername, ".shp")))
-    print(output_shapefile)
     writeOGR( mcpResult , dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
     shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile ), type = "success")
     
   }) 
+  lineBuffer_result <- reactiveVal()  # Reactive value to store MCP result
   
-  # bbmm <- function(){
-  #   X	= "lon" #	The	column	name	of	your	x	coordinate
-  #   Y	= "lat" #	The	column	name	of	your	y	coordinate
-  #   loc.error	= 20
-  #   maxlag	= 60
-  #   levels	= c(95)
-  #   cell.size	= 50 #	change	to	NULL	if	area.grid	is	used
-  #   grid	= NULL #	if	area.grid is	created	Null	status	will	be	removed
-  # }
+  lineBuffer <- function(data, bufferSize){
+    setorder( data, newuid, datetest )
+    output_data <- data.frame()
+    if ("geometry.y" %in% colnames(data)) {
+      data <- subset(data, select = -c(geometry.y))
+    }    
+    # Convert movebankFilter to an sf object
+    data <- sf::st_as_sf(data, coords = c("lon", "lat"), crs = 4326, remove = FALSE)
+    #movebankFilter_sf <- st_transform(movebankFilter_sf, "+init=EPSG:4326")
+    
+    drops <- c("geometry.y") # list of col names
+    data <- data[,!(names(data) %in% drops)]
+    
+    # Get the unique ids from your dataframe
+    unique_ids <- unique(data$newuid)
+    # Loop through each unique id
+    for (id in unique_ids) {
+      # Subset the data for the current id
+      subset_data <- subset(data, newuid == id )
+      # Convert subset_data to sf object
+      test <- st_as_sf(subset_data, coords = c("lon", "lat"))
+
+      geom <- lapply(
+        1:(length(st_coordinates(test)[, 1]) - 1),
+        function(i) {
+          rbind(
+            as.numeric(st_coordinates(test)[i, 1:2]),
+            as.numeric(st_coordinates(test)[i + 1, 1:2])
+          )
+        }
+      ) %>%
+        st_multilinestring() %>%
+        st_sfc(crs = st_crs(test)) %>%
+        st_cast("LINESTRING")
+
+      # Buffer the segments
+      buffered_segments <- sf::st_buffer(geom, dist = bufferSize)  # Adjust the distance as needed
+
+      # Union the buffered segments
+      unioned_line <- st_union(buffered_segments)
+
+      result <- as.data.frame(unioned_line)
+      result$id <- id
+      # Append the result to output_data
+      output_data <- rbind(output_data, result)
+    }
+    output_sf <- st_as_sf(output_data)
+    #output_spdf <- as_Spatial(output_sf)
+    output$plotLineBuffer <- renderLeaflet({
+      leaflet(output_sf) %>%
+        addTiles() %>%
+        addPolygons(fillColor = "red", weight = 2)
+    })
+    plot(output_sf)
+    lineBuffer_result(output_sf)
+  }
   
-
-
+  buffer <- Waiter$new(
+    html = tagList(
+      spin_3(),
+      h4("Calculating line buffers", style = "color: grey") # Add style attribute to h4 element
+    ),
+    color = transparent(.5)
+  )
+  observeEvent(input$runLineBuffer,{
+    data <- movebankFilter()
+    buffer$show()
+    lineBuffer(data, input$bufferSize)
+    buffer$hide()
+    showModal(modalDialog(
+      title="Line Buffer",
+      use_bs_popover(),
+      leafletOutput("plotLineBuffer"),
+      textInput('lineBufferFileName', 'Please provide a name for your shapefile', 
+                value = ""),
+      footer = tagList(
+        actionButton("exportLineBuffer","Export Line Buffer"),
+        
+        modalButton("Cancel")
+      )
+    ))
+    
+  })
+  
+  observeEvent(input$exportLineBuffer,{
+    lineBuffer_result<- lineBuffer_result()
+    
+    layername = input$lineBufferFileName
+    output_shapefile <- normalizePath(file.path(exportQuery(), paste0(layername, ".shp")))
+    writeOGR( lineBuffer_result , dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
+    shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile ), type = "success")
+    
+  }) 
   
   
 }
