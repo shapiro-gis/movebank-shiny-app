@@ -1,129 +1,75 @@
-kernlUD <- function(data){
-  traj <- ltraj(data$lon, data$lat, timestamp = data$datetest, id = 1)
+lineBuffer_result <- reactiveVal()  # Reactive value to store MCP result
+
+lineBuffer <- function(data, bufferSize){
+  setorder( data, newuid, datetest )
+  output_data <- data.frame()
+  if ("geometry.y" %in% colnames(data)) {
+    data <- subset(data, select = -c(geometry.y))
+  }    
+  # Convert movebankFilter to an sf object
+  data <- sf::st_as_sf(data, coords = c("lon", "lat"), crs = 4326, remove = FALSE)
+  #movebankFilter_sf <- st_transform(movebankFilter_sf, "+init=EPSG:4326")
   
-  ud <- kernelUD(traj, h = "href")
-  # 95% contour home range
-  hr_95 <- getverticeshr(ud, percent = 0.95)
-  plot(hr_95)
-  # 50% contour home range
-  hr_50 <- getverticeshr(ud, percent = 0.5)
-  plot(hr_50)
+  drops <- c("geometry.y") # list of col names
+  data <- data[,!(names(data) %in% drops)]
+  
+  # Get the unique ids from your dataframe
+  unique_ids <- unique(data$newuid)
+  # Loop through each unique id
+  for (id in unique_ids) {
+    # Subset the data for the current id
+    subset_data <- subset(data, newuid == id )
+    # Convert subset_data to sf object
+    test <- st_as_sf(subset_data, coords = c("lon", "lat"))
+    
+    geom <- lapply(
+      1:(length(st_coordinates(test)[, 1]) - 1),
+      function(i) {
+        rbind(
+          as.numeric(st_coordinates(test)[i, 1:2]),
+          as.numeric(st_coordinates(test)[i + 1, 1:2])
+        )
+      }
+    ) %>%
+      st_multilinestring() %>%
+      st_sfc(crs = st_crs(test)) %>%
+      st_cast("LINESTRING")
+    
+    # Buffer the segments
+    buffered_segments <- sf::st_buffer(geom, dist = bufferSize)  # Adjust the distance as needed
+    
+    # Union the buffered segments
+    unioned_line <- st_union(buffered_segments)
+    
+    result <- as.data.frame(unioned_line)
+    result$id <- id
+    # Append the result to output_data
+    output_data <- rbind(output_data, result)
+  }
+  output_sf <- st_as_sf(output_data)
+  #output_spdf <- as_Spatial(output_sf)
+  output$plotLineBuffer <- renderLeaflet({
+    leaflet(output_sf) %>%
+      addTiles() %>%
+      addPolygons(fillColor = "red", weight = 2)
+  })
+  plot(output_sf)
+  lineBuffer_result(output_sf)
 }
 
-lineBuffer<- function(){
-#data<- as.data.frame(importedDatasetMaster)
-data <- data %>%
-    
-    arrange(newuid,id_yr,dateTest) #order database first
+
+mcp_result <- reactiveVal()  # Reactive value to store MCP result
+
+
+calculateMCP <- function(data){
+  datapoints<-SpatialPoints(cbind(data$lon,data$lat))
   
-  
-  
-  # data$burst <- CalcBurst(data=data, id = TRUE,
-  #                         
-  #                         id_name="id_yr",
-  #                         
-  #                         date_name="dateTest", Tmax = 3600*7) #set Tmax to 7 hours, a little more than double the fix rate
-  
-  length(unique(data$burst))
-  
-  data <- CalcMovParams(data=data, id_name = "id_yr", date_name = "dateTest",
-                        
-                        burst=data$burst)
-  
-  
-  
-  # now create a lines from steps, where each row is its own connected step
-  
-  lns <- Points2Lines(data=data,
-                      
-                      date_name="dateTest",
-                      
-                      id_name="id_yr",
-                      
-                      byid=FALSE,  # put FALSE here so it does one line per step
-                      
-                      no_cores=11)  # must change this! Try detectCores()-1
-  
-  head(lns)
-  
-  nrow(data)
-  
-  nrow(lns)
-  
-  
-  
-  # now, must remove steps with relatively large gaps between them (e.g., > 8 hrs)
-  
-  # I am just going to use my burst column for this, which I specified as less than 7 hours
-  
-  table(data$StepFlag)
-  
-  
-  
-  lns <- lns %>%
-    
-    filter(StepFlag == TRUE)
-  
-  
-  
-  # now buffer the lines by the differt buff values and
-  
-  # create a sf database with all the home ranges for each id and the 3 different buff levels
-  
-  linebuffs %>%
-    
-    lns %>%
-    
-    st_buffer(dist=300) %>%   # buffer each step
-    
-    group_by(id_yr) %>%
-    
-    summarise(do_union = TRUE)  # st_union each steps' buffered line into a single polygon
-  
-  
-  
-  head(linebuffs)
-  
-  tail(linebuffs)
-  
-  table(linebuffs$id_yr)
-  
-  
-  
-  # now add the sizes
-  
-  linebuffs$HR_size_km2 <- as.numeric(st_area(linebuffs))/1000000
-  
-  hist(linebuffs$HR_size_km2)
+  #MCP
+  datapoints.mcp <- mcp(datapoints, percent = 95)
+  output$plotMCP <- renderLeaflet({
+    leaflet(datapoints.mcp) %>%
+      addTiles() %>%
+      addPolygons(fillColor = "red", weight = 2)
+  })
+  mcp_result(datapoints.mcp)  # Store MCP result in reactive value
 }
-
-library(raster)
-library(sf)
-ext <- raster::extent(data)
-
-
-CalcPopGrid <- function(datasf=d,
-                        out.fldr=getwd(),
-                        mult4buff=0.3,
-                        cell.size=500){
-  
-  
-  multiplyers <- c((ext[2]-ext[1])*mult4buff, (ext[4]-ext[3])*mult4buff)   # add about 20% around the edges of your extent (you can adjust this if necessary)
-  ext <- raster::extend(ext, multiplyers)
-  grd <- raster(ext)
-  res(grd) <- cell.size     
-  projection(grd) <- st_crs(datasf)$proj4string
-  grd[] <- 0  # put some 0s in there so it isn't empty
-  
-  rm(ext, multiplyers, datasf) #remove objects
-  gc()
-  
-  #write out grid
-  writeRaster(grd, filename=paste0(out.fldr,"/PopGrid_empty.tif"), 
-              format = "GTiff", overwrite = TRUE)
-  
-  return(paste0("Your population grid has ", ncell(grd), " cells! It has been written to your out.fldr"))
-}  
-
-grd <- raster(Pop.grid)
-

@@ -1,13 +1,11 @@
 load_geojson <- function(urls) {
-  plan(multisession)  # Use multiple parallel sessions
+  plan(multisession, workers = 5)  # Use multiple parallel sessions
   
   sf_list <- future_map(urls, function(url) {
     response <- GET(url)
     geojson <- content(response, "text")
     st_read(geojson, quiet = TRUE)
   })
-  
- 
   return(sf_list)
 }
 
@@ -28,44 +26,5 @@ urls <- c(
   "https://services6.arcgis.com/cWzdqIyxbijuhPLw/arcgis/rest/services/BighornSheepHuntAreas/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson",
 "https://services.wygisc.org/HostGIS/rest/services/GeoHub/WGFDRegionWildlifeBiologists/MapServer/0/query?outFields=*&where=1%3D1&f=geojson",
 "https://services6.arcgis.com/cWzdqIyxbijuhPLw/arcgis/rest/services/WildlifeAdministrativeRegions/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson")
-
-merge_polygons <- function(MuleDeerCrucialRange, MuleDeerHerdUnits, MuleDeerSeasonalRange,
-                           DeerHuntAreas, AntelopeHerdUnits, AntelopeHuntAreas) {
-  
-  MuleDeerCrucialRange <- MuleDeerCrucialRange %>%
-    dplyr::rename(id = RANGE) %>%
-    dplyr::select(id, geometry) %>%
-    dplyr::mutate(layer_name = "MuleDeerCrucialRange")
-  
-  MuleDeerHerdUnits <- MuleDeerHerdUnits %>%
-    dplyr::rename(id = MD_HERDNAME) %>%
-    dplyr::select(id, geometry) %>%
-    dplyr::mutate(layer_name = "MuleDeerHerdUnits")
-  
-  MuleDeerSeasonalRange <- MuleDeerSeasonalRange %>%
-    dplyr::rename(id = RANGE) %>%
-    dplyr::select(id, geometry) %>%
-    dplyr::mutate(layer_name = "MuleDeerSeasonalRange")
-  
-  DeerHuntAreas <- DeerHuntAreas %>%
-    dplyr::rename(id = HUNTNAME) %>%
-    dplyr::select(id, geometry) %>%
-    dplyr::mutate(layer_name = "DeerHuntAreas")
-  
-  AntelopeHerdUnits <- AntelopeHerdUnits %>%
-    dplyr::rename(id = HERDNAME) %>%
-    dplyr::select(id, geometry) %>%
-    dplyr::mutate(layer_name = "AntelopeHerdUnits")
-  
-  AntelopeHuntAreas <- AntelopeHuntAreas %>%
-    dplyr::rename(id = HUNTNAME) %>%
-    dplyr::select(id, geometry) %>%
-    dplyr::mutate(layer_name = "AntelopeHuntAreas")
-  
-  merged_polygons <- rbind(MuleDeerCrucialRange, MuleDeerHerdUnits, MuleDeerSeasonalRange,
-                           DeerHuntAreas, AntelopeHerdUnits, AntelopeHuntAreas)
-  
-  return(merged_polygons)
-}
 
 

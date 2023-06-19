@@ -22,6 +22,7 @@ addShapefileDropdown <- function() {
   return(dropdown_options)
 }
 
+#-------------------- Combine projects selected
 
 combineprojects <- function(MuleDeerHerdUnits, AntelopeHerdUnits, inputShapefile, DeerHuntAreas, AntelopeHuntAreas, AntelopeSeasonalRange, MuleDeerSeasonalRange, BisonHerdUnits, BisonHuntAreas) {
   shapefile_names <- as.character(inputShapefile)
@@ -106,7 +107,9 @@ locationViewer<<- function(data){
 
 }
 
-#Filter data from the Query Builder
+#-------------------- Filter data from the Query Builder
+
+
 queryFilter<<- function(data, dateRange, selectAnimal, selectProject, selectMonth, selectYear,selectUnit, selectSpecies, selectRange,merged_polygons, 
                         selectSpatialFilter,selectUnitID,selectHuntUnit,selectHerdUnit,selectLayer, selectColumn, selectColumnValue,
                         MuleDeerHerdUnits,MuleDeerSeasonalRange,DeerHuntAreas,AntelopeHerdUnits,AntelopeHuntAreas,BisonHerdUnits,BisonHuntAreas,ElkHerdUnits,ElkHuntAreas,MooseHerdUnits,MooseHuntAreas,BighornSheepHerdUnits,BighornSheepHuntAreas,BioDistricts,AdminRegions)

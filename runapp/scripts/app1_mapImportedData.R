@@ -180,13 +180,10 @@ showMortalityProblemBox<-function(){
 
 animalYearAverages<<-list()
 
-# Update the selectAnimal dropdown whenever the selectProject value changes
-
 
 getAnimalYearAverages <- function() {
   allAnimals <- unique(importedDatasetMaster@data$newUid)
   selectedAnimal <<- allAnimals[1]
-  updateSelectInput(session, 'individualsSelector', label = NULL, choices = allAnimals, selected = selectedAnimal)
   updateSelectInput(session, 'individualsSelector', label = NULL, choices = allAnimals, selected = selectedAnimal)
   animalYears <- reactive({
     req(!is.null(importedDatasetMaster))
@@ -195,7 +192,6 @@ getAnimalYearAverages <- function() {
     selectedAnimal <- input$individualsSelector
     filteredData <- importedDatasetMaster@data[importedDatasetMaster@data$newUid == selectedAnimal, ]
     uniqueYears <- unique(filteredData$year)
-    print(uniqueYears)
     return(uniqueYears)
   })
   
@@ -205,8 +201,9 @@ getAnimalYearAverages <- function() {
   #updateDateInput(session,'beingDate',label = NULL, value = importedDatasetMaster$start_date)
   
   observeEvent(input$individualsSelector, {
+    selectedAnimal <<- input$individualsSelector
     selectedYear <<- animalYears()[1]  # Update selectedYear based on animalYears
-    updateSelectInput(session, 'yearSelector', label = NULL, choices = c('All Years', animalYears()), selected = selectedYear)
+    updateSelectInput(session, 'yearSelector', label = NULL, choices = c('All Years', animalYears()), selected = 'All Years')
     addPointsToMap()
   }, ignoreInit = TRUE)
   
@@ -510,7 +507,6 @@ addPointsToMap<-function(){
   if(selectedYear=='All Years'){
     if(selectedAnimal=='All Individuals'){
       pointsForMap<<-importedDatasetMaster
-      print("All Years Selected")
     }else{
       pointsForMap<<-importedDatasetMaster[which(importedDatasetMaster$newUid==selectedAnimal),]
     }
@@ -519,9 +515,6 @@ addPointsToMap<-function(){
       pointsForMap<<-importedDatasetMaster[which(importedDatasetMaster$year==selectedYear),]
     }else{
       pointsForMap<<-importedDatasetMaster[which(importedDatasetMaster$newUid==selectedAnimal & importedDatasetMaster$year==selectedYear),]
-    print("select year in point if")
-      print(selectedYear)
-    print(selectedAnimal)
       }
   }
   
@@ -558,7 +551,7 @@ addPointsToMap<-function(){
           id='linesUnderLayer'
         )%>%
         update_mapboxer()
-      print(linesData)
+
       mapboxer_proxy("importedDataMapBox") %>%
         add_source(as_mapbox_source(linesData),'linesSource')%>%
         add_line_layer(
@@ -626,7 +619,7 @@ addPointsToMap<-function(){
       isSourceAdded<<-TRUE;
       
     }else{
-      print("No source added")
+
       mapboxer_proxy("importedDataMapBox") %>%
         set_data(linesData,'linesUnderSource')%>%
         update_mapboxer()

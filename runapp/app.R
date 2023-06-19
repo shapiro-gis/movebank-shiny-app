@@ -58,8 +58,10 @@ if("lubridate" %in% (.packages())){
 
 Sys.setenv(MAPBOX_API_TOKEN = "pk.eyJ1Ijoid21pLW1lcmtsZSIsImEiOiJja3RrYmluMnMxazRlMm9xbnN3bXluYjQzIn0.wOmx_vSC944YRdF8LSjZRQ")
 
-ui <- navbarPage(id = "navibar",
-  title = div(#img(src = "deertracks.png",height = "30px", width = "30px"),
+ui <- 
+  navbarPage(id = "navibar",
+  title = div(#img(src = "deertracks.png",height = "30px", width = "30px
+    tags$head(tags$link(rel = "icon", type = "image/png", href = "pronghorn-edit.png")),
     "Movebank Explorer",
     tags$style(HTML("
       #logo {
@@ -84,13 +86,10 @@ ui <- navbarPage(id = "navibar",
         img(src = "wgfd_logo.png", id = "logo2",height = "50px", width = "40px"),
   ),
   theme = shinytheme("sandstone"),
-  # tabPanel("Connect", 
-  # ),
+
 tabPanel("Home", id = "homepage",
-         # parent container
          tags$div(class="landing-wrapper",
                   
-                  # child element 1: images
                   tags$div(class="landing-block background-content",
                            
                            # top left
@@ -108,7 +107,6 @@ tabPanel("Home", id = "homepage",
                            
                   ),
                   
-                  # child element 2: content
                   tags$div(class="landing-block foreground-content",
                            tags$div(class="foreground-text",
                                     tags$h1("Welcome!"),
@@ -269,7 +267,6 @@ tabPanel( "Data Cleaning",value = "app1",
                               uiOutput("uploadedShapefile18"),
                               uiOutput("uploadedShapefile19"),
                               uiOutput("uploadedShapefile20"),        
-                            #  actionButton("app1Button", style = "width:100%; font-weight:bolder; margin-top:15px !important;", "Open module 1")
                               ),
                               column(4,
                                      
@@ -484,7 +481,7 @@ div(class = "outer",
  
   absolutePanel(
     id = "controls", class = "panel panel-default", fixed = TRUE,
-    draggable = TRUE, top = 120, 
+    draggable = TRUE, top = 140, 
     left = "0.4%", bottom = "auto",
     width = 0, height = 0,
     actionBttn(
@@ -497,6 +494,7 @@ div(class = "outer",
     bsTooltip(id = "parametersButton", title = "Configuration Parameters",
               placement = "right", trigger = "hover"),
     br(),
+
     actionBttn(
       inputId = "exportShapefile",
       label = "Export Data",
@@ -505,18 +503,18 @@ div(class = "outer",
       icon = icon("download")
       ),
 
-  bsTooltip(id = "export", title = "Export data to shapefile",
+  bsTooltip(id = "exportShapefile", title = "Export to a shapefile",
             placement = "right", trigger = "hover"),
     br(),
-    actionBttn(
-      inputId = "basemapButton",
-      label = "Toggle Basemap",
-      style = "material-circle",
-      color = "primary",
-      icon = icon("map")
-    ),
-  bsTooltip(id = "basemapButton", title = "toggle basemap options",
-            placement = "right", trigger = "hover"),
+    # actionBttn(
+    #   inputId = "basemapButton",
+    #   label = "Toggle Basemap",
+    #   style = "material-circle",
+    #   color = "primary",
+    #   icon = icon("map")
+    # ),
+  # bsTooltip(id = "basemapButton", title = "toggle basemap options",
+  #           placement = "right", trigger = "hover"),
     
     
     ),
@@ -527,7 +525,7 @@ div(class = "outer",
     right =0, bottom = "auto",
     width = "35%", height = "auto",
     style = "padding: 20px 20px 20px 20px;
-             opacity: 0.90;",
+             opacity: 0.92;",
     div(
       style = "text-align: center;",
       fluidRow(
@@ -556,8 +554,6 @@ div(class = "outer",
         div(
           class = "btn-group",
           style = "text-align: center;",
-          
-      #    style = "display: inline-block;",
           actionButton('backwardHandlerButton', 'Previous Animal'),
           actionButton('forwardHandlerButton', 'Next Animal')
         )
@@ -570,8 +566,6 @@ div(class = "outer",
     br(),
     tabsetPanel(
       tabPanel("NSD Plot",
-   # plotOutput("speedPlot",height='25vh',click = "plot_click",hover = hoverOpts(id = "plot_hover", delay = 0)),
-    #plotOutput("fixRatePlot",height='25vh',click = "plot_click",hover = hoverOpts(id = "plot_hover", delay = 0)),
     plotOutput("nsdPlot",height='25vh',click = "plot_click",hover = hoverOpts(id = "plot_hover", delay = 0))
       ),
     tabPanel("Speed Plot",
@@ -589,7 +583,6 @@ div(class = "outer",
              uiOutput("pointsPerTimeInfo"),
              br(),
              uiOutput("dateRangeInfo"),
-             #actionButton("export",("Download Shapefile")),
              uiOutput('polygonHolder'),
              )),
  br(),
@@ -606,10 +599,9 @@ tabPanel(#icon = icon("new-window", lib =  "glyphicon"),
              tags$head(
                includeCSS("styles.css")
              ),
-         #     
+
               useWaiter(),
               mapdeckOutput("myMap",width = "100%", height = "100%"),
-         #     
              absolutePanel(
                tags$style(type="text/css",
                           ".shiny-output-error { visibility: hidden; }",
@@ -685,13 +677,7 @@ tabPanel(#icon = icon("new-window", lib =  "glyphicon"),
                                         selectInput("selectColumnValue", "Select Value:",
                                                     choices =  "",multiple=TRUE)
                                         ),
-                                        # selectInput("selectHuntUnit", "Hunt Name:",
-                                        #             choices =  "",multiple=TRUE),
-                                        # selectInput("selectHerdUnit", "Herd Name:",
-                                        #             choices =  "",multiple=TRUE),
                                         actionButton("query",("Query")),
-                                        # bsTooltip(id = "query", title = "This is an input",
-                                        #           placement = "right", trigger = "hover"),
                                       )
                                     ),
                            ),
@@ -832,8 +818,7 @@ appOneReload <- function(filePath){
     mapInit()
     #loadingScreenToggle('hide','')
     saveWorkingFile();
-    #writeOGR(importedDatasetMaster,"Movebank//" ,".", layer="test5", driver="ESRI Shapefile")
-    
+
   }else{
     modalMessager('Error',paste0('Data file from this session does not exist at ',filePath,'. Please try loading the data file manually using the "Reload Existing Project Folder" button.'))
     sessionCheckLocation<-paste0(dirname(getwd()),'//session.rds')

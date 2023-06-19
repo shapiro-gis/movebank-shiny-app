@@ -43,7 +43,6 @@ mergeShapfilesHandler<-function(){
     else{for(i in 1:length(importedShapefilesHolder)){
       importedShapefilesHolder[[i]]@data['studyname']<<-NULL
       thisNewstudyname<-gsub("_","-",importedShapefilesHolder[[i]]@data[,studyname])
-      print(thisNewstudyname)
       importedShapefilesHolder[[i]]@data['studyname']<<-thisNewstudyname
     }}
     

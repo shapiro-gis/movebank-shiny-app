@@ -1,7 +1,8 @@
 
 app2_init<-function(input,output,session){
-  ###APp 2
-  observe({
+  
+  
+  
     dropdown_options <- addShapefileDropdown()
     print(dropdown_options)
     
@@ -10,8 +11,7 @@ app2_init<-function(input,output,session){
     } else {
       updateSelectInput(session, "shapefileDropdown", choices = dropdown_options)
     }
-  })
-  
+
 
   #Create a spinner
   w <- Waiter$new(
@@ -29,56 +29,69 @@ app2_init<-function(input,output,session){
     color = transparent(.5)
   )
   
+  # Create a reactive value to track if the data has been loaded
+  data_loaded <- reactiveVal(FALSE)
   gis$show()
+  # Check if the data has already been loaded
+  if (!data_loaded()) {
+    # Load the GeoJSON data
+    sf_list <- load_geojson(urls)
+    
+    # Assign each layer to its corresponding variable
+    MuleDeerCrucialRange <- sf_list[[1]]
+    MuleDeerHerdUnits <- sf_list[[2]]
+    MuleDeerSeasonalRange <- sf_list[[3]]
+    DeerHuntAreas <- sf_list[[4]]
+    AntelopeHerdUnits <- sf_list[[5]]
+    AntelopeHuntAreas <- sf_list[[6]]
+    BisonHerdUnits <- sf_list[[7]]
+    BisonHuntAreas <- sf_list[[8]]
+    ElkHerdUnits <- sf_list[[9]]
+    ElkHuntAreas <- sf_list[[10]]
+    MooseHerdUnits <- sf_list[[11]]
+    MooseHuntAreas <- sf_list[[12]]
+    BighornSheepHerdUnits <- sf_list[[13]]
+    BighornSheepHuntAreas <- sf_list[[14]]
+    BioDistricts <- sf_list[[15]]
+    AdminRegions <- sf_list[[16]]
+    
+    layerNames <- c(
+      "MuleDeerCrucialRange", "MuleDeerHerdUnits", "MuleDeerSeasonalRange", "DeerHuntAreas", 
+      "AntelopeHerdUnits", "AntelopeHuntAreas", "BisonHerdUnits", "BisonHuntAreas", 
+      "ElkHerdUnits", "ElkHuntAreas", "MooseHerdUnits", "MooseHuntAreas", 
+      "BighornSheepHerdUnits", "BighornSheepHuntAreas", "BioDistricts", "AdminRegions"
+    )
+    
+    # Create select inputs for layer, column, and column value
+    updateSelectInput(session, "selectLayer", choices = layerNames, selected = NULL)
+    updateSelectInput(session, "selectColumn", choices = NULL, selected = NULL)
+    updateSelectInput(session, "selectColumnValue", choices = NULL)
+    
+    # Update the choices of selectColumn based on the selected layer
+    observeEvent(input$selectLayer, {
+      layerIndex <- match(input$selectLayer, layerNames)
+      if (!is.na(layerIndex)) {
+        layer <- sf_list[[layerIndex]]
+        columnNames <- colnames(layer)
+        updateSelectInput(session, "selectColumn", choices = columnNames)
+      }
+    })
+    
+    # Update the choices of selectColumnValue based on the selected layer and column
+    observeEvent(c(input$selectLayer, input$selectColumn), {
+      layerIndex <- match(input$selectLayer, layerNames)
+      if (!is.na(layerIndex)) {
+        layer <- sf_list[[layerIndex]]
+        column <- input$selectColumn
+        columnValues <- unique(layer[[column]])
+        updateSelectInput(session, "selectColumnValue", choices = columnValues)
+      }
+    })
+    
+    # Set the reactive value to indicate that the data has been loaded
+    data_loaded(TRUE)
+  }
   
-  #Load in GIS Layers
-  sf_list <- load_geojson(urls)
-  
-  MuleDeerCrucialRange <- sf_list[[1]]
-  MuleDeerHerdUnits <- sf_list[[2]]
-  MuleDeerSeasonalRange<- sf_list[[3]]
-  DeerHuntAreas <- sf_list[[4]]
-  AntelopeHerdUnits <- sf_list[[5]]
-  AntelopeHuntAreas <- sf_list[[6]]
-  BisonHerdUnits <- sf_list[[7]]
-  BisonHuntAreas <- sf_list[[8]]
-  ElkHerdUnits <- sf_list [[9]]
-  ElkHuntAreas <- sf_list [[10]]
-  MooseHerdUnits <- sf_list [[11]]
-  MooseHuntAreas <- sf_list [[12]]
-  BighornSheepHerdUnits <-sf_list [[13]]
-  BighornSheepHuntAreas <- sf_list [[14]]
-  BioDistricts <- sf_list [[15]]
-  AdminRegions<- sf_list [[16]]
-  
-  layerNames <- c("MuleDeerCrucialRange", "MuleDeerHerdUnits", "MuleDeerSeasonalRange", "DeerHuntAreas", "AntelopeHerdUnits", "AntelopeHuntAreas", "BisonHerdUnits", "BisonHuntAreas", "ElkHerdUnits", "ElkHuntAreas", "MooseHerdUnits", "MooseHuntAreas", "BighornSheepHerdUnits", "BighornSheepHuntAreas", "BioDistricts", "AdminRegions")
-  
-  # Create select inputs for layer, column, and column value
-  updateSelectInput(session, "selectLayer", choices = layerNames, selected = NULL)
-  updateSelectInput(session, "selectColumn", choices = NULL, selected = NULL)
-  updateSelectInput(session, "selectColumnValue", choices = NULL)
-  
-  
-  # Update the choices of selectColumn based on the selected layer
-  observeEvent(input$selectLayer, {
-    layerIndex <- match(input$selectLayer, layerNames)
-    if (!is.na(layerIndex)) {
-      layer <- sf_list[[layerIndex]]
-      columnNames <- colnames(layer)
-      updateSelectInput(session, "selectColumn", choices = columnNames)
-    }
-  })
-  
-  # Update the choices of selectColumnValue based on the selected layer and column
-  observeEvent(c(input$selectLayer, input$selectColumn), {
-    layerIndex <- match(input$selectLayer, layerNames)
-    if (!is.na(layerIndex)) {
-      layer <- sf_list[[layerIndex]]
-      column <- input$selectColumn
-      columnValues <- unique(layer[[column]])
-      updateSelectInput(session, "selectColumnValue", choices = columnValues)
-    }
-  })
 
   gis$hide()
   
@@ -94,12 +107,16 @@ app2_init<-function(input,output,session){
     }
   })
   
+  
+  
   # Update the selectAnimal dropdown whenever the selectProject value changes
   observeEvent(input$selectProject, {
     req(!is.null(movebankData()))
     updateSelectInput(session, "selectAnimal", choices = c("All", sort(filtered_animals())), selected = NULL)
   })
   
+  
+  ## Connect to selected projects
   movebankData<- eventReactive(input$connect,{
     req(input$connect)
     w$show()
@@ -147,6 +164,8 @@ app2_init<-function(input,output,session){
   
   
   
+  ############-------------------- Results Tab --------------------#############
+  
   
   output$info_animals <- renderUI({
     req(nrow(movebankFilter()) > 1, "The data must have more than one record.")
@@ -192,6 +211,11 @@ app2_init<-function(input,output,session){
     
   })
   
+  
+  
+  ############-------------------- Map --------------------#############
+  
+  
   observe( {
     req(movebankData())
     data<- movebankData()
@@ -212,7 +236,7 @@ app2_init<-function(input,output,session){
       )
   })
   
-  ## QUery Results
+  ## Query Results
   observeEvent(input$query,{
     req(nrow(movebankFilter()) > 1, "The data must have more than one record.")
     mapdeck_update(map_id = "myMap") %>%
@@ -644,8 +668,8 @@ observeEvent({input$BioDistricts},{
 
 
 
-  ##------------------- Export queried data
-  
+############-------------------- Export Results --------------------#############
+
   
   
   
@@ -667,8 +691,6 @@ observeEvent({input$BioDistricts},{
       footer = tagList(
         actionButton("exportSample","Export Sampled Points"),
         actionButton("exportLines","Export Lines"),
-       # actionButton("exportHomeRange","Export Home Range"),
-        
         modalButton("Cancel")
       )
     ))
@@ -684,8 +706,6 @@ observeEvent({input$BioDistricts},{
     layername = input$fileNameQuery
     output_shapefile <- normalizePath(file.path(exportQuery(), paste0(layername, ".shp")))
     writeOGR(spdf, dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
-    
-   # writeOGR(spdf, exportQuery(), ".", layer = input$fileName, driver = "ESRI Shapefile", overwrite_layer = TRUE)
     shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile), type = "success")
     removeModal()
   }) 
@@ -708,34 +728,58 @@ observeEvent({input$BioDistricts},{
   
   
   
-#-------------------- Home Range Calucation buttons
-    
+  ############-------------------- Home Range Calculations --------------------#############
+  
     
     
   observeEvent(input$exportCalcRange,{
     showModal(modalDialog(
       title="Calculate Home Ranges",
-      HTML("<strong>MCP:</strong> Create Minimum Convex Polygon(MCP) of the movement data. These are the simplest defined areas; polygons defined by the outside extent of the data points."),
-      
-      actionButton("runMCP", "Run MCP"),
-      " ",
-   
-      br(),
-      br(),
-      
-      HTML("<strong>KDE:</strong> Create kernel density estimates to measure home ranges of the movement data. This uses contour lines to measure home ranges with kernels. "),
-      
-      actionButton("runKDE", "Run KDE"),
-      " ",
-      
-      br(),
-      br(),
-      HTML("<strong>Line Buffer:</strong> Create line buffers of individual animals based on their steps."),
       fluidRow(
-      actionButton("runLineBuffer", "Run Line Buffer"),
-      " ",
+        column(
+          width = 10,
+          HTML("<strong>MCP:</strong> Create Minimum Convex Polygon(MCP) of the movement data. These are the simplest areas defined by the outside extent of the data points.")
+        ),
+        column(
+          width = 2,
+          align = "center",
+          style = "padding: 10px;",
+          div(
+            style = "position: relative; left: -10px;",
+          actionButton("runMCP", "Run MCP")
+        ))
+      ),
+      br(),
+      fluidRow(
+        column(
+          width = 10,
+      HTML("<strong>KDE:</strong> Create kernel density estimates to measure home ranges of the movement data. This uses contour lines to measure home ranges with kernels. "),
+      ),
+      br(),
+      column(
+        width = 2,
+        align = "center",
+        style = "padding: 10px;",
+        div(
+          style = "position: relative; left: -10px;",
+      actionButton("runKDE", "Run KDE")))),
+      br(),
+      fluidRow(
+        column(
+          width = 10,
+      HTML("<strong>Line Buffer:</strong> Create buffer home ranges by buffering the GPS-based movement paths of animals based on their step lengths. Input a value below to change the buffer size."),
+      ),
+      column(
+        width = 2,
+        align = "center",
+        style = "padding: 10px;",
+        div(
+          style = "position: relative; left: -10px;",
+      actionButton("runLineBuffer", "Run Line Buffer",style = "white-space: normal; word-wrap: break-word;"),
+  
+      ))),
       numericInput(inputId = "bufferSize", label = "Input Buffer Size", 
-                   value = 300)),
+                   value = 300),
       footer = tagList(
         modalButton("Cancel")
       )
@@ -847,6 +891,9 @@ observeEvent({input$BioDistricts},{
     shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile ), type = "success")
     
   }) 
+  
+  
+  
   lineBuffer_result <- reactiveVal()  # Reactive value to store MCP result
   
   lineBuffer <- function(data, bufferSize){
@@ -897,12 +944,13 @@ observeEvent({input$BioDistricts},{
     }
     output_sf <- st_as_sf(output_data)
     #output_spdf <- as_Spatial(output_sf)
+    
     output$plotLineBuffer <- renderLeaflet({
       leaflet(output_sf) %>%
         addTiles() %>%
         addPolygons(fillColor = "red", weight = 2)
     })
-    plot(output_sf)
+    print(class(output_sf))
     lineBuffer_result(output_sf)
   }
   
@@ -935,7 +983,7 @@ observeEvent({input$BioDistricts},{
   
   observeEvent(input$exportLineBuffer,{
     lineBuffer_result<- lineBuffer_result()
-    
+    print(lineBuffer_result)
     layername = input$lineBufferFileName
     output_shapefile <- normalizePath(file.path(exportQuery(), paste0(layername, ".shp")))
     writeOGR( lineBuffer_result , dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)

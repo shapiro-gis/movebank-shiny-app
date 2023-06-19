@@ -487,7 +487,6 @@ processMovebankData<-function(movebankData){
   
   
 
-  print(movebankData)
   importedDatasetMaster@data[["lon"]]<<-as.numeric(importedDatasetMaster@data[,'location_long_new'])
   importedDatasetMaster@data[["lat"]]<<-as.numeric(importedDatasetMaster@data[,'location_lat_new'])
   importedDatasetMaster@data$rowIds<<-row.names(importedDatasetMaster@data)
