@@ -31,29 +31,29 @@ app2_init<-function(input,output,session){
   
   # Create a reactive value to track if the data has been loaded
   data_loaded <- reactiveVal(FALSE)
-  gis$show()
+#  gis$show()
   # Check if the data has already been loaded
   if (!data_loaded()) {
     # Load the GeoJSON data
-    sf_list <- load_geojson(urls)
-    
-    # Assign each layer to its corresponding variable
-    MuleDeerCrucialRange <- sf_list[[1]]
-    MuleDeerHerdUnits <- sf_list[[2]]
-    MuleDeerSeasonalRange <- sf_list[[3]]
-    DeerHuntAreas <- sf_list[[4]]
-    AntelopeHerdUnits <- sf_list[[5]]
-    AntelopeHuntAreas <- sf_list[[6]]
-    BisonHerdUnits <- sf_list[[7]]
-    BisonHuntAreas <- sf_list[[8]]
-    ElkHerdUnits <- sf_list[[9]]
-    ElkHuntAreas <- sf_list[[10]]
-    MooseHerdUnits <- sf_list[[11]]
-    MooseHuntAreas <- sf_list[[12]]
-    BighornSheepHerdUnits <- sf_list[[13]]
-    BighornSheepHuntAreas <- sf_list[[14]]
-    BioDistricts <- sf_list[[15]]
-    AdminRegions <- sf_list[[16]]
+    # sf_list <- load_geojson(urls)
+    # 
+    # # Assign each layer to its corresponding variable
+    # MuleDeerCrucialRange <- sf_list[[1]]
+    # MuleDeerHerdUnits <- sf_list[[2]]
+    # MuleDeerSeasonalRange <- sf_list[[3]]
+    # DeerHuntAreas <- sf_list[[4]]
+    # AntelopeHerdUnits <- sf_list[[5]]
+    # AntelopeHuntAreas <- sf_list[[6]]
+    # BisonHerdUnits <- sf_list[[7]]
+    # BisonHuntAreas <- sf_list[[8]]
+    # ElkHerdUnits <- sf_list[[9]]
+    # ElkHuntAreas <- sf_list[[10]]
+    # MooseHerdUnits <- sf_list[[11]]
+    # MooseHuntAreas <- sf_list[[12]]
+    # BighornSheepHerdUnits <- sf_list[[13]]
+    # BighornSheepHuntAreas <- sf_list[[14]]
+    # BioDistricts <- sf_list[[15]]
+    # AdminRegions <- sf_list[[16]]
     
     layerNames <- c(
       "MuleDeerCrucialRange", "MuleDeerHerdUnits", "MuleDeerSeasonalRange", "DeerHuntAreas", 
@@ -93,7 +93,7 @@ app2_init<-function(input,output,session){
   }
   
 
-  gis$hide()
+ # gis$hide()
   
   
   
