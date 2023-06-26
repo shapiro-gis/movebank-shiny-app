@@ -349,19 +349,26 @@ showColumnChoiceInfo<-function(){
       
       species <- if (!is.null(input$customSpeciesInput)) {
         input$customSpeciesInput
+        importedDatasetMaster$species <<- input$customSpeciesInput
       } else {
         input$speciesSelector
+        importedDatasetMaster$species <<- importedDatasetMaster@data[, input$speciesSelector]
+        
       }
       
-      studyname <- if (input$studynameSelector == "NaN") {
+      studyname <- if (!is.null(input$customStudyInput)) {
         input$movebankStudyInput
+        importedDatasetMaster$studyname <<- input$movebankStudyInput
+        
       } else {
         input$studynameSelector
+        importedDatasetMaster$studyname <<- importedDatasetMaster@data[, input$studynameSelector]
       }
+      print(species)
       
       importedDatasetMaster$newUid <<- importedDatasetMaster@data[, newUid]
-      importedDatasetMaster$species <<- importedDatasetMaster@data[, species]
-      importedDatasetMaster$studyname <<- studyname
+      #importedDatasetMaster$species <<- importedDatasetMaster@data[, species]
+      #importedDatasetMaster$studyname <<- importedDatasetMaster@data[, studyname]
       
       
       showDateTimeSelectionPanel()

@@ -35,7 +35,7 @@ mergeShapfilesHandler<-function(){
     if (input$studynameSelector == "NaN") {
       for(i in 1:length(importedShapefilesHolder)){
         importedShapefilesHolder[[i]]@data['studyname']<<-NULL
-        thisNewUid<- customStudyInput
+        thisNewUid<- input$customStudyInput
         thisNewUid<-gsub("_", "-", thisNewUid)
         importedShapefilesHolder[[i]]@data['studyname']<<-thisNewUid
       }
