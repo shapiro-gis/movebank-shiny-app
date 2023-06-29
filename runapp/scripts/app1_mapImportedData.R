@@ -202,7 +202,7 @@ getAnimalYearAverages <- function() {
   
   observeEvent(input$individualsSelector, {
     selectedAnimal <<- input$individualsSelector
-    selectedYear <<- animalYears()[1]  # Update selectedYear based on animalYears
+    selectedYear <<- animalYears()  # Update selectedYear based on animalYears
     updateSelectInput(session, 'yearSelector', label = NULL, choices = c('All Years', animalYears()), selected = 'All Years')
     addPointsToMap()
   }, ignoreInit = TRUE)
