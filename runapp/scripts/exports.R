@@ -24,9 +24,10 @@ exportSamplePoints<<- function(data, inputInterval){
 
 
 exportQuery<<- function(){
-  wd<- getwd()
+  #wd<- getwd()
   # #masterWorkingDirectory<- sessionInfo$masterWorkingDirectory
   # 
-  app_dir <- normalizePath(file.path(wd, ".."), winslash = "/")
-  app_dir<-paste0(app_dir,'//Movebank//Exports//')
+ # app_dir <- normalizePath(file.path(wd, ".."), winslash = "/")
+  #app_dir<-paste0(app_dir,'//Movebank//Exports//')
+  app_dir<-paste0(appRoot,'/movebank/Exports/')
 }

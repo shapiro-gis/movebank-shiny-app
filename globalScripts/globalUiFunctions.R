@@ -91,8 +91,9 @@ saveSessionInfo<<-function(){
 
  
 MovebankFolder<<- function(){
-  app_dir <- normalizePath(file.path(masterWorkingDirectory, ".."), winslash = "/")
-  app_dir<-paste0(app_dir,'/movebank/')
+  #app_dir <- normalizePath(file.path(masterWorkingDirectory, ".."), winslash = "/")
+  #app_dir<-paste0(app_dir,'/movebank/')
+  app_dir<-paste0(appRoot,'/movebank/')
   print(app_dir)
 }
 
