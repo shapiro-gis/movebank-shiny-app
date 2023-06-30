@@ -17,37 +17,20 @@ mergeShapfilesHandler<-function(){
     studyname <-  input$studynameSelector
 
     #Add species field
-    if (input$speciesSelector == "NaN") {
-      for(i in 1:length(importedShapefilesHolder)){
-        importedShapefilesHolder[[i]]@data['species']<<-NULL
-        thisNewUid<- input$customSpeciesInput
-        thisNewUid<-gsub("_", "-", thisNewUid)
-        importedShapefilesHolder[[i]]@data['species']<<-thisNewUid
-      }
-    } else{
-    for(i in 1:length(importedShapefilesHolder)){
-      importedShapefilesHolder[[i]]@data['species']<<-NULL
-      thisNewSpecies<-gsub("_","-",importedShapefilesHolder[[i]]@data[,species])
-      importedShapefilesHolder[[i]]@data['species']<<-thisNewSpecies
-    }}
+    # if (input$speciesSelector == "NaN") {
+    #   for(i in 1:length(importedShapefilesHolder)){
+    #     importedShapefilesHolder[[i]]@data['species']<<-NULL
+    #     thisNewUid<- input$customSpeciesInput
+    #     thisNewUid<-gsub("_", "-", thisNewUid)
+    #     importedShapefilesHolder[[i]]@data['species']<<-thisNewUid
+    #   }
+    # } else{
+    # for(i in 1:length(importedShapefilesHolder)){
+    #   importedShapefilesHolder[[i]]@data['species']<<-NULL
+    #   thisNewSpecies<-gsub("_","-",importedShapefilesHolder[[i]]@data[,species])
+    #   importedShapefilesHolder[[i]]@data['species']<<-thisNewSpecies
+    # }}
     
-    #Add study name field
-    if (input$studynameSelector == "NaN") {
-      for(i in 1:length(importedShapefilesHolder)){
-        importedShapefilesHolder[[i]]@data['studyname']<<-NULL
-        thisNewUid<- input$customStudyInput
-        thisNewUid<-gsub("_", "-", thisNewUid)
-        importedShapefilesHolder[[i]]@data['studyname']<<-thisNewUid
-      }
-    }
-    else{for(i in 1:length(importedShapefilesHolder)){
-      importedShapefilesHolder[[i]]@data['studyname']<<-NULL
-      thisNewstudyname<-gsub("_","-",importedShapefilesHolder[[i]]@data[,studyname])
-      importedShapefilesHolder[[i]]@data['studyname']<<-thisNewstudyname
-    }}
-    
-
-   # progressIndicator('Processing.... Please wait...','start')
 
     # if nan is chosen then the uid will just be the filename
     if(selectedUid=='NaN'){
@@ -68,7 +51,59 @@ mergeShapfilesHandler<-function(){
         importedShapefilesHolder[[i]]@data['newUid']<<-thisNewUid
       }
     }
+    
+    
+    
+    #Add study name field
+    if (input$studynameSelector == "NaN") {
+      for(i in 1:length(importedShapefilesHolder)){
+        importedShapefilesHolder[[i]]@data['studyname']<<-NULL
+        thisNewUid<- input$customStudyInput
+        thisNewUid<-gsub("_", "-", thisNewUid)
+        importedShapefilesHolder[[i]]@data['studyname']<<-thisNewUid
+      }
+    }
+    else{for(i in 1:length(importedShapefilesHolder)){
+      
+      if ("STUDYNAME" %in% colnames(importedShapefilesHolder[[i]]@data)){
+        colnames(importedShapefilesHolder[[i]]@data)[which(names(importedShapefilesHolder[[i]]@data) == "STUDYNAME")] <- "studyname"
+        print( colnames(importedShapefilesHolder[[i]]@data))
+        
+      } else {
+        importedShapefilesHolder[[i]]@data['studyname']<<-NULL
+        thisNewstudyname<-gsub("_","-",importedShapefilesHolder[[i]]@data[,studyname])
+        importedShapefilesHolder[[i]]@data['studyname']<<-thisNewstudyname
+        
+      }
+    }}
+    
 
+   # progressIndicator('Processing.... Please wait...','start')
+
+    if (input$speciesSelector == "NaN") {
+      for(i in 1:length(importedShapefilesHolder)){
+        importedShapefilesHolder[[i]]@data['species'] <<- NULL
+        thisNewUid <- input$customSpeciesInput
+        thisNewUid <- gsub("_", "-", thisNewUid)
+        importedShapefilesHolder[[i]]@data['species'] <<- thisNewUid
+      }
+    } else {
+      for(i in 1:length(importedShapefilesHolder)){
+        if ("SPECIES" %in% colnames(importedShapefilesHolder[[i]]@data)){
+          print(names(importedShapefilesHolder[[i]]@data[species]))
+          colnames(importedShapefilesHolder[[i]]@data)[which(names(importedShapefilesHolder[[i]]@data) == "SPECIES")] <- "species"
+          
+        } else {
+          importedShapefilesHolder[[i]]@data['species']<<-NULL
+          thisNewSpecies<-gsub("_","-",importedShapefilesHolder[[i]]@data[,species])
+          importedShapefilesHolder[[i]]@data['species']<<-thisNewSpecies
+          print( colnames(importedShapefilesHolder[[i]]@data))
+          
+        }
+     
+      }
+    }
+    
     
 
 
@@ -198,7 +233,6 @@ projectShapefilesHandler<-function(){
   #progressIndicator('Extracting Elevation Data','stop')
 
   importedDatasetMaster@data['comments']<<-''
-  print("Adding species field from merging project files script")
 
   midLatLong <- c(importedDatasetMaster@data[1,'lat'],importedDatasetMaster@data[1,'lon'])
   zone <- find_UTM_zone(midLatLong[2], midLatLong[1])

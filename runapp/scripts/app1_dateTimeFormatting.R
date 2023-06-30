@@ -426,7 +426,6 @@ processDates<-function(){
       max_end_date <- min(subset_data$newMasterDate)
       importedDatasetMaster$end_date[importedDatasetMaster$newUid == uid] <- max_end_date
     }
-    print(importedDatasetMaster$end_date)
     naDatesLength<<-nrow(importedDatasetMaster@data[is.na(as.Date(importedDatasetMaster@data$newMasterDate)),])
     configOptions$naDates<<-NULL
     configOptions$naDatesLength<<-naDatesLength
