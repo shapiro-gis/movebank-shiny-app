@@ -84,6 +84,8 @@ combineprojects <- function(MuleDeerHerdUnits, AntelopeHerdUnits, inputShapefile
   
   combined_sf <- do.call(rbind, combined_sf)
   combined_sf <- as.data.frame(st_drop_geometry(combined_sf))
+  combined_sf <- subset(combined_sf, select = -c(geometry.y))
+  
   combined_sf$month <- format(as.Date(combined_sf$datetest), "%m")
   combined_sf$year <- format(as.Date(combined_sf$datetest), "%Y")
   
@@ -115,31 +117,32 @@ queryFilter<<- function(data, dateRange, selectAnimal, selectProject, selectMont
                         MuleDeerHerdUnits,MuleDeerSeasonalRange,DeerHuntAreas,AntelopeHerdUnits,AntelopeHuntAreas,BisonHerdUnits,BisonHuntAreas,ElkHerdUnits,ElkHuntAreas,MooseHerdUnits,MooseHuntAreas,BighornSheepHerdUnits,BighornSheepHuntAreas,BioDistricts,AdminRegions)
 
   {
-
-  if (is.null(selectAnimal) || selectAnimal == "All") {
+    
+  # if (is.null(selectAnimal) || selectAnimal == "All") {
+  #   movebankFilter <- data
+  # } else {
+  #   movebankFilter <- data[as.character(data$newuid) %in% selectAnimal, ]
+  # }
+  if (is.null(selectAnimal) || all(selectAnimal == "All")) {
     movebankFilter <- data
   } else {
-    movebankFilter <- data[as.character(data$newuid) %in% selectAnimal, ]
+    movebankFilter <- data[data$newuid %in% selectAnimal, ]
   }
+  
+
   # Filter by selectProject
-  if (!is.null(selectProject) && selectProject != "All") {
+  if (!is.null(selectProject) && !identical(selectProject, "All")) {
+  #if (!is.null(selectProject) && selectProject != "All") {
     movebankFilter <- movebankFilter[movebankFilter$studyname %in% selectProject, ]
   }
   # Filter by Capture Unit
-  if (!is.null(selectUnit) && selectUnit != "All") {
+  if (!is.null(selectUnit) && !identical(selectUnit, "All")) {
     movebankFilter <- movebankFilter[movebankFilter$first_loc_herdunit_name %in% selectUnit, ]
-  }
-  if (!is.null(selectHuntUnit) && selectHuntUnit != "All") {
-    movebankFilter <- movebankFilter[movebankFilter$hunt_name_col %in% selectHuntUnit, ]
-  }
-  if (!is.null(selectHerdUnit) && selectHerdUnit != "All") {
-    movebankFilter <- movebankFilter[movebankFilter$herd_unit_col %in% selectHerdUnit, ]
   }
   
   # Filter by Species
-  
-  if (!is.null(selectSpecies) && selectSpecies != "All") {
-    movebankFilter <- movebankFilter[movebankFilter$species %in% selectSpecies, ]
+  if (!is.null(selectSpecies) && !identical(selectSpecies, "All")) {
+      movebankFilter <- movebankFilter[movebankFilter$species %in% selectSpecies, ]
   }
   
   start_date <- paste0(as.character(dateRange[1])," 00:00:00")
@@ -147,15 +150,15 @@ queryFilter<<- function(data, dateRange, selectAnimal, selectProject, selectMont
   #data <- data[data$datetst >= start_date & data$datetst <= end_date, ]
   
   # Filter data based on selected filters
-  if (selectRange == 'Month & Year' && !is.null(selectMonth) && selectMonth != "All" && !is.null(selectYear) && selectYear != "All") {
+  if (selectRange == 'Month & Year' && !is.null(selectMonth) && !identical(selectMonth, "All") && !is.null(selectYear) && !identical(selectYear, "All")) {
     movebankFilter <- movebankFilter[movebankFilter$month %in% selectMonth & movebankFilter$year %in% selectYear, ]
     print("Using select range")
   } else{
     # Otherwise, filter by date range (or just year/month if one is selected)
-    if (!is.null(selectMonth) && selectMonth != "All") {
+    if (!is.null(selectMonth) && !identical(selectMonth, "All")) {
       movebankFilter <- movebankFilter[movebankFilter$month %in% selectMonth, ]
     }
-    if (!is.null(selectYear) && selectYear != "All") {
+    if (!is.null(selectYear) && !identical(selectYear, "All")) {
       movebankFilter <- movebankFilter[movebankFilter$year %in% selectYear, ]
     }}
   
@@ -196,27 +199,29 @@ queryFilter<<- function(data, dateRange, selectAnimal, selectProject, selectMont
     }else if(selectLayer == "AdminRegions"){
       selectedLayer <- AdminRegions 
     }
-
-      movebankFilter <- subset(movebankFilter, select = -c(geometry.y))
+    print(movebankFilter)
+      #movebankFilter <- subset(movebankFilter, select = -c(geometry.y))
       
       # Convert movebankFilter to an sf object
       movebankFilter_sf <- sf::st_as_sf(movebankFilter, coords = c("lon", "lat"), crs = 4326, remove = FALSE)
       #movebankFilter_sf <- st_transform(movebankFilter_sf, "+init=EPSG:4326")
-      
+      print("Checked")
       drops <- c("geometry.y") # list of col names
       movebankFilter_sf <- movebankFilter_sf[,!(names(movebankFilter_sf) %in% drops)] #remove columns "AREA" and "PERIMETER"
-
       movebankFilter_sf <- st_join(movebankFilter_sf, selectedLayer, join = st_within)
-      
+
+
       #movebankFilter_sf <- sf::st_join(movebankFilter_sf, selected_layer[selected_layer[[selectLayerColumn]] == selected_value, ], join = sf::st_within)
-      coordinates <- sf::st_coordinates(movebankFilter_sf$geometry)
-      movebankFilter_sf$lat <- coordinates[, "Y"]
-      movebankFilter_sf$lon <- coordinates[, "X"]
+   #  # coordinates <- sf::st_coordinates(movebankFilter_sf$geometry)
+    # # movebankFilter_sf$lat <- coordinates[, "Y"]
+  #  #  movebankFilter_sf$lon <- coordinates[, "X"]
 
       # Convert back to a data frame
       movebankFilter <- as.data.frame(movebankFilter_sf)
-      movebankFilter <- movebankFilter[movebankFilter[[selectColumn]] %in% selectColumnValue, ]
 
+      movebankFilter <- movebankFilter[movebankFilter[[selectColumn]] %in% selectColumnValue, ]
+      movebankFilter <- subset(movebankFilter, select = -c(geometry))
+      
         }
   
   return(movebankFilter)

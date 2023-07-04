@@ -12,6 +12,8 @@ showDateTimeSelectionPanel<-function(){
       print('date column select change')
       dateColumns <<- input$dateColumnSelector
       print(dateColumns)
+      print("Printing Class")
+      print(class(dateColumns))
     })
 
     observeEvent(input$doneChoosingDateColumnsButton,{
@@ -335,6 +337,7 @@ processDates<-function(){
 
         # need to check for any decimals in the data
         checkForDec<-function(element,from){
+          print(class(element))
           element<-as.numeric(element)
           isDecimal<-testInteger(element)
           if(!isDecimal){

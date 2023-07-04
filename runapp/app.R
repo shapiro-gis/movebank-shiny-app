@@ -121,7 +121,7 @@ tabPanel("Home", id = "homepage",
                            
                            # bottom right
                            
-                           img(src="wmi.jpg")
+                           img(src="elkmig.jpg")
                            
                   ),
                   
@@ -619,7 +619,8 @@ tabPanel(#icon = icon("new-window", lib =  "glyphicon"),
              ),
 
               useWaiter(),
-              mapdeckOutput("myMap",width = "100%", height = "100%"),
+
+             mapboxerOutput("myMap",width = "100%", height = "100%"),
              absolutePanel(
                tags$style(type="text/css",
                           ".shiny-output-error { visibility: hidden; }",
@@ -708,9 +709,8 @@ tabPanel(#icon = icon("new-window", lib =  "glyphicon"),
                                         div(tableOutput('indvsummary'),style = "font-size:85%"),
 
                                     ),
-                                    prettySwitch("color","Trackline Color", FALSE),
-                                   # prettySwitch("pointLayer","Point Layer", FALSE),
-                                    prettySwitch("heatMap","Heat Map", FALSE),
+                                    #prettySwitch("color","Trackline Color", FALSE),
+                                   # prettySwitch("heatMap","Heat Map", FALSE),
                             
                                    # actionButton("color", label = "Change Trackline Color", icon = icon("paintbrush")),
                                     br(),
