@@ -197,13 +197,13 @@ getAnimalYearAverages <- function() {
   
   selectedYear <<- NULL  # Initialize selectedYear with a default value
   
-  updateSelectInput(session, 'yearSelector', label = NULL, choices = c('All Years', animalYears()), selected = 'All Years')
+  updateSelectInput(session, 'yearSelector', label = NULL, choices = c('All Years', animalYears()), selected = selectedYear)
   #updateDateInput(session,'beingDate',label = NULL, value = importedDatasetMaster$start_date)
   
   observeEvent(input$individualsSelector, {
     selectedAnimal <<- input$individualsSelector
-    selectedYear <<- animalYears()  # Update selectedYear based on animalYears
-    updateSelectInput(session, 'yearSelector', label = NULL, choices = c('All Years', animalYears()), selected = 'All Years')
+    selectedYear <<- animalYears()[1]   # Update selectedYear based on animalYears
+    updateSelectInput(session, 'yearSelector', label = NULL, choices = c('All Years', animalYears()), selected = selectedYear)
     addPointsToMap()
   }, ignoreInit = TRUE)
   
@@ -503,12 +503,16 @@ addPointsToMap<-function(){
   }
 
   clearHoverPoint()
-
+  print(selectedYear)
   if(selectedYear=='All Years'){
+    print(selectedAnimal)
     if(selectedAnimal=='All Individuals'){
       pointsForMap<<-importedDatasetMaster
     }else{
+      print("print 2")
       pointsForMap<<-importedDatasetMaster[which(importedDatasetMaster$newUid==selectedAnimal),]
+      print(pointsForMap)
+      
     }
   }else{
     if(selectedAnimal=='All Individuals'){
