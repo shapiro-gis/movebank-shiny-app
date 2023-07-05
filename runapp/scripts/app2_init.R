@@ -151,7 +151,7 @@ app2_init<-function(input,output,session){
     movebankFilter <- execute_safely(queryFilter(data, input$dateRange, input$selectAnimal, input$selectProject, input$selectMonth, input$selectYear, input$selectUnit, 
                                                  input$selectSpecies, input$selectRange, merged_polygons, input$selectSpatialFilter,
                                                  input$selectUnitID, input$selectHuntUnit, input$selectHerdUnit,input$selectLayer, input$selectColumn, 
-                                                 input$selectColumnValue, MuleDeerHerdUnits,MuleDeerSeasonalRange,DeerHuntAreas,AntelopeHerdUnits,AntelopeHuntAreas,BisonHerdUnits,BisonHuntAreas,ElkHerdUnits,ElkHuntAreas,MooseHerdUnits,MooseHuntAreas,BighornSheepHerdUnits,BighornSheepHuntAreas,BioDistricts,AdminRegions))
+                                                 input$selectColumnValue, MuleDeerHerdUnits,MuleDeerSeasonalRange,DeerHuntAreas,AntelopeHerdUnits,AntelopeHuntAreas,BisonHerdUnits,BisonHuntAreas,ElkHerdUnits,ElkHuntAreas,MooseHerdUnits,MooseHuntAreas,BighornSheepHerdUnits,BighornSheepHuntAreas,BioDistricts,AdminRegions,input$selectWithin))
      if (is.null(movebankFilter) || nrow(movebankFilter) == 0) {
       showNotification("No data found. Please adjust your search criteria.", type = "error")
       return(NULL)

@@ -332,7 +332,8 @@ tabPanel( "Data Cleaning",value = "app1",
           a unique ID will be created from the name of each file.'),
                             column(12,
                                    HTML('<p>Once you make a choice in the dropdown, press the EXECUTE button to
-            continue preparing your data. If "NaN" is selected below, please enter the correct value.</p>'),
+            continue preparing your data. If you do not have a study name or species column in your data set, please select "NaN" from the drop down option. This will prompt
+                                        a write in option.</p>'),
                                    selectInput(
                                      "studynameSelector",
                                      "Select Study Name Column",

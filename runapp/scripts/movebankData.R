@@ -114,7 +114,7 @@ locationViewer<<- function(data){
 
 queryFilter<<- function(data, dateRange, selectAnimal, selectProject, selectMonth, selectYear,selectUnit, selectSpecies, selectRange,merged_polygons, 
                         selectSpatialFilter,selectUnitID,selectHuntUnit,selectHerdUnit,selectLayer, selectColumn, selectColumnValue,
-                        MuleDeerHerdUnits,MuleDeerSeasonalRange,DeerHuntAreas,AntelopeHerdUnits,AntelopeHuntAreas,BisonHerdUnits,BisonHuntAreas,ElkHerdUnits,ElkHuntAreas,MooseHerdUnits,MooseHuntAreas,BighornSheepHerdUnits,BighornSheepHuntAreas,BioDistricts,AdminRegions)
+                        MuleDeerHerdUnits,MuleDeerSeasonalRange,DeerHuntAreas,AntelopeHerdUnits,AntelopeHuntAreas,BisonHerdUnits,BisonHuntAreas,ElkHerdUnits,ElkHuntAreas,MooseHerdUnits,MooseHuntAreas,BighornSheepHerdUnits,BighornSheepHuntAreas,BioDistricts,AdminRegions, selectWithin)
 
   {
     
@@ -169,7 +169,7 @@ queryFilter<<- function(data, dateRange, selectAnimal, selectProject, selectMont
   
   
   # Perform spatial join if a GIS layer and column value are selected
-  if (!is.null(selectLayer) && !is.null(selectColumn) && !is.null(selectColumnValue)) {
+  if (selectWithin == TRUE && !is.null(selectLayer) && !is.null(selectColumn) && !is.null(selectColumnValue)) {
     if (selectLayer == "MuleDeerHerdUnits") {
       selectedLayer <- MuleDeerHerdUnits 
     } else if(selectLayer == "DeerHuntAreas"){
