@@ -79,21 +79,33 @@ mergeShapfilesHandler<-function(){
     
 
    # progressIndicator('Processing.... Please wait...','start')
-
+   # if (input$speciesSelector == "NaN") {
+   #    for(i in 1:length(importedShapefilesHolder)){
+   #      importedShapefilesHolder[[i]]@data['species'] <<- NULL
+   #      thisNewUid <- input$customSpeciesInput
+   #      thisNewUid <- gsub("_", "-", thisNewUid)
+   #      importedShapefilesHolder[[i]]@data['species'] <<- thisNewUid
+   #    }
+   #  }
     if (input$speciesSelector == "NaN") {
-      for(i in 1:length(importedShapefilesHolder)){
-        importedShapefilesHolder[[i]]@data['species'] <<- NULL
+      for (i in 1:length(importedShapefilesHolder)) {
+        if ("SPECIES" %in% names(importedShapefilesHolder[[i]]@data)) {
+          importedShapefilesHolder[[i]]@data$SPECIES_OLD <- importedShapefilesHolder[[i]]@data$SPECIES
+        }
         thisNewUid <- input$customSpeciesInput
         thisNewUid <- gsub("_", "-", thisNewUid)
-        importedShapefilesHolder[[i]]@data['species'] <<- thisNewUid
+        importedShapefilesHolder[[i]]@data$SPECIES <- thisNewUid
       }
-    } else {
+    }
+    else {
       for(i in 1:length(importedShapefilesHolder)){
         if ("SPECIES" %in% colnames(importedShapefilesHolder[[i]]@data)){
           print(names(importedShapefilesHolder[[i]]@data[species]))
           colnames(importedShapefilesHolder[[i]]@data)[which(names(importedShapefilesHolder[[i]]@data) == "SPECIES")] <- "species"
           
-        } else {
+        }
+        
+        else {
           importedShapefilesHolder[[i]]@data['species']<<-NULL
           thisNewSpecies<-gsub("_","-",importedShapefilesHolder[[i]]@data[,species])
           importedShapefilesHolder[[i]]@data['species']<<-thisNewSpecies
