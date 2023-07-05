@@ -358,14 +358,13 @@ showColumnChoiceInfo<-function(){
       
       studyname <- if (!is.null(input$customStudyInput)) {
         input$movebankStudyInput
-        importedDatasetMaster$studyname <<- input$movebankStudyInput
+        importedDatasetMaster$studyname <<- input$customStudyInput
         
       } else {
         input$studynameSelector
         importedDatasetMaster$studyname <<- importedDatasetMaster@data[, input$studynameSelector]
       }
-      print(species)
-      
+
       importedDatasetMaster$newUid <<- importedDatasetMaster@data[, newUid]
       #importedDatasetMaster$species <<- importedDatasetMaster@data[, species]
       #importedDatasetMaster$studyname <<- importedDatasetMaster@data[, studyname]
