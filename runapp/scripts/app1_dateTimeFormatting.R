@@ -299,6 +299,8 @@ processDates<-function(){
       # assign back to the temp holder just the correct index
       # of that date time element
       assign(selectedDateTimeElements[j],sapply(tempDateDataObjSplt,"[[",tempIndexOfLoc))
+      print("Printing selected date time elements")
+      print(selectedDateTimeElements)
       if(j==validatorsLength){
         if(!exists('year')){
           modalMessager('ERROR','no year')
@@ -322,22 +324,27 @@ processDates<-function(){
           return()
         }
         if(!exists('hour')){
+          hour<-"00"
+
           modalMessager('ERROR','no hour')
-          dtvRunning<<-FALSE
+          #dtvRunning<<-FALSE
           #loadingScreenToggle('hide','processing dates')
           #progressIndicator('Done importing dates','stop')
           return()
         }
         if(!exists('minute')){
           minute<-"00"
+          return()
+          
         }
         if(!exists('second')){
           second<-"00"
+          return()
+          
         }
-
+# 
         # need to check for any decimals in the data
         checkForDec<-function(element,from){
-          print(class(element))
           element<-as.numeric(element)
           isDecimal<-testInteger(element)
           if(!isDecimal){
@@ -356,19 +363,38 @@ processDates<-function(){
           if(test == TRUE){ return(TRUE) }
           else { return(FALSE) }
         }
-
+        
+        if (!("hour" %in% selectedDateTimeElements)) {
+          selectedDateTimeElements <- c(selectedDateTimeElements, "hour")
+          hour <- "00"
+        }
+        if (!("minute" %in% selectedDateTimeElements)) {
+          selectedDateTimeElements <- c(selectedDateTimeElements, "minute")
+          minute <- "00"
+        }
+        if (!("second" %in% selectedDateTimeElements)) {
+          selectedDateTimeElements <- c(selectedDateTimeElements, "second")
+          second <- "00"
+        }
+        print("Printing fixed date time elements")
+        print(selectedDateTimeElements)
+        
         checkForDec(year,'year')
         checkForDec(month,'month')
         checkForDec(day,'day')
         checkForDec(hour,'hour')
         checkForDec(minute,'minute')
+        
         if(testInteger(second)){
           oldSec<<-second
           second<<-round(second)
         }
 
         newDate<<-paste(year,month,day,sep="-")
-        newTime<<-paste(hour,minute,second,sep=":")
+
+        
+        newTime <<- paste(as.character(hour), as.character(minute), as.character(second), sep = ":")
+        #newTime<<-paste(hour,minute,second,sep=":")
         if(ampmtime){
           newTime<<-paste0(newTime,' ',ampm)
           rm(ampm)
