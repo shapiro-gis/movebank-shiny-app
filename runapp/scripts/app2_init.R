@@ -1316,6 +1316,8 @@ app2_init<-function(input,output,session){
       output_data <- rbind(output_data, result)
     }
     output_sf <- st_as_sf(output_data)
+    #output_sf <- st_geometry(output_sf)
+    
     #output_spdf <- as_Spatial(output_sf)
     
     output$plotLineBuffer <- renderLeaflet({
@@ -1353,15 +1355,24 @@ app2_init<-function(input,output,session){
     
   })
   
-  observeEvent(input$exportLineBuffer,{
-    lineBuffer_result<- lineBuffer_result()
+# observeEvent(input$exportLineBuffer, {
+#   lineBuffer_result <- lineBuffer_result()
+#   print("Printing Line buffer results")
+#   print(lineBuffer_result)
+#   layername <- input$lineBufferFileName
+#   output_shapefile <- normalizePath(file.path(exportQuery(), paste0(layername, ".shp")))
+#   st_write(lineBuffer_result, output_shapefile)
+#   shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile), type = "success")
+# })
+  observeEvent(input$exportLineBuffer, {
+    lineBuffer_result <- lineBuffer_result()
+    print("Printing Line buffer results")
     print(lineBuffer_result)
-    layername = input$lineBufferFileName
+    layername <- input$lineBufferFileName
     output_shapefile <- normalizePath(file.path(exportQuery(), paste0(layername, ".shp")))
-    writeOGR( lineBuffer_result , dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
-    shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile ), type = "success")
-    
-  }) 
+    st_write(lineBuffer_result, output_shapefile)
+    shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile), type = "success")
+  })
   
   
 }
