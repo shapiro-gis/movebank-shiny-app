@@ -112,7 +112,7 @@ app2_init<-function(input,output,session){
   # Update the selectAnimal dropdown whenever the selectProject value changes
   observeEvent(input$selectProject, {
     req(!is.null(movebankData()))
-    updateSelectInput(session, "selectAnimal", choices = c("All", sort(filtered_animals())), selected = NULL)
+    updateSelectInput(session, "selectAnimal", choices = sort(filtered_animals()), selected = NULL)
   })
   
   
@@ -121,12 +121,12 @@ app2_init<-function(input,output,session){
     req(input$connect)
     w$show()
     movebankData<- combineprojects(MuleDeerHerdUnits,AntelopeHerdUnits,input$shapefileDropdown,DeerHuntAreas,AntelopeHuntAreas,AntelopeSeasonalRange,MuleDeerSeasonalRange,BisonHerdUnits,BisonHuntAreas)
-    updateSelectInput(session, "selectAnimal", choices = c("All",sort(unique(movebankData$newuid), decreasing = FALSE)), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
+    updateSelectInput(session, "selectAnimal", choices = sort(unique(movebankData$newuid), decreasing = FALSE), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
     updateSelectInput(session, "selectProject", choices = c("All",sort(unique(movebankData$studyname ))), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
-    updateSelectInput(session, "selectMonth", choices = c("All",sort(unique(movebankData$month ))), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
-    updateSelectInput(session, "selectYear", choices = c("All",sort(unique(movebankData$year ))), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
-    updateSelectInput(session, "selectUnit", choices = c("All",sort(unique(movebankData$first_loc_herdunit_name ))), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
-    updateSelectInput(session, "selectSpecies", choices = c("All",sort(unique(movebankData$species ))), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
+    updateSelectInput(session, "selectMonth", choices = sort(unique(movebankData$month )), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
+    updateSelectInput(session, "selectYear", choices = sort(unique(movebankData$year )), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
+    updateSelectInput(session, "selectUnit", choices = sort(unique(movebankData$first_loc_herdunit_name )), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
+    updateSelectInput(session, "selectSpecies", choices = sort(unique(movebankData$species )), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
     #updateSelectInput(session, "selectHuntUnit", choices = c("All",sort(unique(movebankData$hunt_name_col ))), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
     #updateSelectInput(session, "selectHerdUnit", choices = c("All",sort(unique(movebankData$herd_unit_col ))), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
 
@@ -1183,8 +1183,11 @@ app2_init<-function(input,output,session){
         addTiles() %>%
         addPolygons(fillColor = "red", weight = 2)
     })
+    proj4string(combined_vertices) <- CRS("+proj=longlat +datum=WGS84")
     
     kde_result(combined_vertices)  # Store MCP result in reactive value
+    
+    print(proj4string(combined_vertices))
     
     #proj4string(WGScoor)<- CRS("+proj=longlat +datum=WGS84")
 
@@ -1234,7 +1237,12 @@ app2_init<-function(input,output,session){
         addTiles() %>%
         addPolygons(fillColor = "red", weight = 2)
     })
+    proj4string(datapoints.mcp) <- CRS("+proj=longlat +datum=WGS84")
+    
     mcp_result(datapoints.mcp)  # Store MCP result in reactive value
+    
+    print(proj4string(datapoints.mcp))
+    
   }
   
   observeEvent(input$runMCP,{
@@ -1325,6 +1333,7 @@ app2_init<-function(input,output,session){
         addTiles() %>%
         addPolygons(fillColor = "red", weight = 2)
     })
+
     lineBuffer_result(output_sf)
   }
   
