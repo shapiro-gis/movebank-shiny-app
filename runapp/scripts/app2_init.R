@@ -92,9 +92,6 @@ app2_init<-function(input,output,session){
     data_loaded(TRUE)
   }
   
-
- # gis$hide()
-  
   
   
   filtered_animals <- reactive({
@@ -106,14 +103,34 @@ app2_init<-function(input,output,session){
       return(unique(movebankData()$newuid[movebankData()$studyname == input$selectProject]))
     }
   })
-  
-  
+
   
   # Update the selectAnimal dropdown whenever the selectProject value changes
   observeEvent(input$selectProject, {
     req(!is.null(movebankData()))
-    updateSelectInput(session, "selectAnimal", choices = sort(filtered_animals()), selected = NULL)
+    if (input$selectProject == "All") {
+      filtered_data <- movebankData()
+    }
+    else{
+    filtered_data<- movebankData()[movebankData()$studyname == input$selectProject,]
+    }
+    updateSelectInput(session, "selectAnimal", choices = sort(filtered_animals()), selected = NULL) 
+    updateSelectInput(session, "selectYear", choices = sort(unique(filtered_data$year)), selected = NULL)
+    updateDateRangeInput(session, "dateRange", start = min(filtered_data$datetest),
+                         end = max(filtered_data$datetest))    
   })
+  observeEvent(input$selectAnimal, {
+    req(!is.null(movebankData()))
+    filtered_data <- movebankData()[movebankData()$newuid == input$selectAnimal, ]
+    unique_months <- unique(filtered_data$month)
+    unique_years <- unique(filtered_data$year)
+    
+    updateSelectInput(session, "selectMonth", choices = sort(unique_months), selected = NULL)
+    updateSelectInput(session, "selectYear", choices = sort(unique_years), selected = NULL)
+    updateDateRangeInput(session, "dateRange", start = min(filtered_data$datetest),
+                         end = max(filtered_data$datetest))
+  })
+  
   
   
   ## Connect to selected projects
@@ -127,9 +144,9 @@ app2_init<-function(input,output,session){
     updateSelectInput(session, "selectYear", choices = sort(unique(movebankData$year )), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
     updateSelectInput(session, "selectUnit", choices = sort(unique(movebankData$first_loc_herdunit_name )), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
     updateSelectInput(session, "selectSpecies", choices = sort(unique(movebankData$species )), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
-    #updateSelectInput(session, "selectHuntUnit", choices = c("All",sort(unique(movebankData$hunt_name_col ))), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
-    #updateSelectInput(session, "selectHerdUnit", choices = c("All",sort(unique(movebankData$herd_unit_col ))), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
-
+    updateDateRangeInput(session, "dateRange", start = min(movebankData$datetest),
+                         end = max(movebankData$datetest))
+    
      w$hide()
     # Return the combined sf object
     updateTabsetPanel(session, "QueryBuilder",selected = "Query Builder")
@@ -143,6 +160,7 @@ app2_init<-function(input,output,session){
              style = 'mapbox://styles/mapbox/outdoors-v11', zoom = 5)
   })
   
+
   
   
   movebankFilter <- eventReactive(input$query,{
@@ -214,11 +232,23 @@ app2_init<-function(input,output,session){
     req(movebankData())
     data<- movebankData()
     data<- locationViewer(data)
+    unique_values <- unique(data$newuid)
+    num_colors <- length(unique_values)
+    colors <- colorRampPalette(brewer.pal(9, "Set1"))(num_colors)
+    color_mapping <- setNames(colors, unique_values)
+    #   
+    #   # Create a new column of hex colors based on the values in the "newuid" column
+    data$color <- color_mapping[data$newuid]
+    
     mapboxer_proxy("myMap") %>%
       add_circle_layer(
         source = as_mapbox_source(data,lat="lat",lng="lon"),
-        circle_color = '#000cff',
+      #  circle_color = '#000cff',
+      circle_color =  c("get", "color"), 
         circle_radius = 5,
+        popup = "<b>AID:</b> {{newuid}}</br>
+        <b>Time:</b> {{datetest}}</br>
+        <b>Capture Herd:</b> {{first_loc_herdunit_name}}</br>",
         id = "circle-layer"
       ) %>%
       update_mapboxer()
@@ -277,7 +307,9 @@ app2_init<-function(input,output,session){
       add_circle_layer(
         source = as_mapbox_source(filtered,lat="lat",lng="lon"),
         circle_color =  c("get", "color"), #'#000cff',
-        popup = "{{newuid}}",
+        popup = "<b>AID:</b> {{newuid}}</br>
+        <b>Time:</b> {{datetest}}</br>
+        <b>Capture Herd:</b> {{first_loc_herdunit_name}}</br>",
         circle_radius = 5,
         id = new_circle_layer_id
       ) %>%
@@ -297,36 +329,47 @@ app2_init<-function(input,output,session){
   })
   
   
+  observeEvent(input$resetQuery,{
+    
+    movebankData<- movebankData()
+    
+    updateSelectInput(session, "selectAnimal", choices = sort(unique(movebankData$newuid), decreasing = FALSE), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
+    updateSelectInput(session, "selectProject", choices = c("All",sort(unique(movebankData$studyname ))), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
+    updateSelectInput(session, "selectMonth", choices = sort(unique(movebankData$month )), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
+    updateSelectInput(session, "selectYear", choices = sort(unique(movebankData$year )), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
+    updateSelectInput(session, "selectUnit", choices = sort(unique(movebankData$first_loc_herdunit_name )), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
+    updateSelectInput(session, "selectSpecies", choices = sort(unique(movebankData$species )), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
+    updateDateRangeInput(session, "dateRange", start = min(movebankData$datetest),
+                         end = max(movebankData$datetest))
+    data<- movebankData()
+    data<- locationViewer(data)
+    mapboxer_proxy("myMap") %>%
+      set_layout_property(
+        layer_id = "circle-layer",
+        property = "visibility",
+        value = "visible"
+      )  %>%
+      update_mapboxer()
+
+    mapboxer_proxy("myMap") %>%
+      set_layout_property(
+        layer_id = last_layer_id$circle,
+        property = "visibility",
+        value = "none"
+      )  %>%
+      update_mapboxer()
+    
+    mapboxer_proxy("myMap") %>%
+      set_layout_property(
+        layer_id = last_layer_id$line,
+        property = "visibility",
+        value = "none"
+      )  %>%
+      update_mapboxer()
+  })
   
   
-  
-  # observeEvent(input$query, {
-  #  req(nrow(movebankFilter()) > 1, "The data must have more than one record.")
-  #   filtered <- movebankFilter()
-  #   output$myMap <- renderMapboxer({
-  #     map <- mapboxer(
-  #       style = 'mapbox://styles/mapbox/outdoors-v11',
-  #       zoom = 9
-  #     )
-  #     
-  #     map <- map %>%
-  #       add_circle_layer(
-  #         source = as_mapbox_source(filtered, lat="lat",lng="lon"),
-  #         circle_color = "red",
-  #         circle_radius = 5
-  #       )
-  #     
-  #     map <- map %>%
-  #       add_line_layer(
-  #       source = as_mapbox_source(lines()),
-  #       line_color='#ffffff',
-  #       line_width = 1
-  #       )
-  #      
-  #     
-  #     map
-  #   })
-  # })
+
   
   ## Heat Map Toggle
   # observeEvent(input$heatMap,{
@@ -456,7 +499,7 @@ app2_init<-function(input,output,session){
         # If the layer wasn't previously added, add it and make it visible
         map_proxy %>%
           add_source(as_mapbox_source(MuleDeerHerdUnits), 'MuleDeerHerdUnits') %>%
-          add_fill_layer(source = 'MuleDeerHerdUnits', id = "MuleDeerHerdUnits", fill_color = "blue", fill_opacity = 0.5, popup = "{{MD_HERDNAME}}") %>%
+          add_fill_layer(source = 'MuleDeerHerdUnits', id = "MuleDeerHerdUnits", fill_color = "blue", fill_opacity = 0.2, popup = "{{MD_HERDNAME}}") %>%
           update_mapboxer()
         
         # Update the state of the layer to added
@@ -496,7 +539,7 @@ app2_init<-function(input,output,session){
         # If the layer wasn't previously added, add it and make it visible
         map_proxy %>%
           add_source(as_mapbox_source(MuleDeerSeasonalRange), 'MuleDeerSeasonalRange') %>%
-          add_fill_layer(source = 'MuleDeerSeasonalRange', id = "MuleDeerSeasonalRange", fill_color = "blue", fill_opacity = 0.5, popup = "{{RANGE}}") %>%
+          add_fill_layer(source = 'MuleDeerSeasonalRange', id = "MuleDeerSeasonalRange", fill_color = "blue", fill_opacity = 0.2, popup = "{{RANGE}}") %>%
           update_mapboxer()
         
         # Update the state of the layer to added
@@ -535,7 +578,7 @@ app2_init<-function(input,output,session){
         # If the layer wasn't previously added, add it and make it visible
         map_proxy %>%
           add_source(as_mapbox_source(DeerHuntAreas), 'DeerHuntAreas') %>%
-          add_fill_layer(source = 'DeerHuntAreas', id = "DeerHuntAreas", fill_color = "blue", fill_opacity = 0.5, popup = "{{HUNTNAME}}") %>%
+          add_fill_layer(source = 'DeerHuntAreas', id = "DeerHuntAreas", fill_color = "blue", fill_opacity = 0.2, popup = "{{HUNTNAME}}") %>%
           update_mapboxer()
         
         # Update the state of the layer to added
@@ -576,7 +619,7 @@ app2_init<-function(input,output,session){
         # If the layer wasn't previously added, add it and make it visible
         map_proxy %>%
           add_source(as_mapbox_source(AntelopeHerdUnits), 'AntelopeHerdUnits') %>%
-          add_fill_layer(source = 'AntelopeHerdUnits', id = "AntelopeHerdUnits", fill_color = "blue", fill_opacity = 0.5, popup = "{{HERDNAME}}") %>%
+          add_fill_layer(source = 'AntelopeHerdUnits', id = "AntelopeHerdUnits", fill_color = "blue", fill_opacity = 0.2, popup = "{{HERDNAME}}") %>%
           update_mapboxer()
         
         # Update the state of the layer to added
@@ -616,7 +659,7 @@ app2_init<-function(input,output,session){
         # If the layer wasn't previously added, add it and make it visible
         map_proxy %>%
           add_source(as_mapbox_source(AntelopeHuntAreas), 'AntelopeHuntAreas') %>%
-          add_fill_layer(source = 'AntelopeHuntAreas', id = "AntelopeHuntAreas", fill_color = "blue", fill_opacity = 0.5, popup = "{{HUNTNAME}}") %>%
+          add_fill_layer(source = 'AntelopeHuntAreas', id = "AntelopeHuntAreas", fill_color = "blue", fill_opacity = 0.2, popup = "{{HUNTNAME}}") %>%
           update_mapboxer()
         
         # Update the state of the layer to added
@@ -656,7 +699,7 @@ app2_init<-function(input,output,session){
         # If the layer wasn't previously added, add it and make it visible
         map_proxy %>%
           add_source(as_mapbox_source(BisonHuntAreas), 'BisonHuntAreas') %>%
-          add_fill_layer(source = 'BisonHuntAreas', id = "BisonHuntAreas", fill_color = "blue", fill_opacity = 0.5, popup = "{{HUNTNAME}}") %>%
+          add_fill_layer(source = 'BisonHuntAreas', id = "BisonHuntAreas", fill_color = "blue", fill_opacity = 0.2, popup = "{{HUNTNAME}}") %>%
           update_mapboxer()
         
         # Update the state of the layer to added
@@ -697,7 +740,7 @@ app2_init<-function(input,output,session){
         # If the layer wasn't previously added, add it and make it visible
         map_proxy %>%
           add_source(as_mapbox_source(BisonHerdUnits), 'BisonHerdUnits') %>%
-          add_fill_layer(source = 'BisonHerdUnits', id = "BisonHerdUnits", fill_color = "blue", fill_opacity = 0.5, popup = "{{HERDNAME}}") %>%
+          add_fill_layer(source = 'BisonHerdUnits', id = "BisonHerdUnits", fill_color = "blue", fill_opacity = 0.2, popup = "{{HERDNAME}}") %>%
           update_mapboxer()
         
         # Update the state of the layer to added
@@ -737,7 +780,7 @@ app2_init<-function(input,output,session){
         # If the layer wasn't previously added, add it and make it visible
         map_proxy %>%
           add_source(as_mapbox_source(BighornSheepHerdUnits), 'BighornSheepHerdUnits') %>%
-          add_fill_layer(source = 'BighornSheepHerdUnits', id = "BighornSheepHerdUnits", fill_color = "blue", fill_opacity = 0.5, popup = "{{HERDNAME}}") %>%
+          add_fill_layer(source = 'BighornSheepHerdUnits', id = "BighornSheepHerdUnits", fill_color = "blue", fill_opacity = 0.2, popup = "{{HERDNAME}}") %>%
           update_mapboxer()
         
         # Update the state of the layer to added
@@ -777,7 +820,7 @@ app2_init<-function(input,output,session){
         # If the layer wasn't previously added, add it and make it visible
         map_proxy %>%
           add_source(as_mapbox_source(BighornSheepHuntAreas), 'BighornSheepHuntAreas') %>%
-          add_fill_layer(source = 'BighornSheepHuntAreas', id = "BighornSheepHuntAreas", fill_color = "blue", fill_opacity = 0.5, popup = "{{HUNTNAME}}") %>%
+          add_fill_layer(source = 'BighornSheepHuntAreas', id = "BighornSheepHuntAreas", fill_color = "blue", fill_opacity = 0.2, popup = "{{HUNTNAME}}") %>%
           update_mapboxer()
         
         # Update the state of the layer to added
@@ -819,7 +862,7 @@ app2_init<-function(input,output,session){
         # If the layer wasn't previously added, add it and make it visible
         map_proxy %>%
           add_source(as_mapbox_source(ElkHerdUnits), 'ElkHerdUnits') %>%
-          add_fill_layer(source = 'ElkHerdUnits', id = "ElkHerdUnits", fill_color = "blue", fill_opacity = 0.5, popup = "{{HERDNAME}}") %>%
+          add_fill_layer(source = 'ElkHerdUnits', id = "ElkHerdUnits", fill_color = "blue", fill_opacity = 0.2, popup = "{{HERDNAME}}") %>%
           update_mapboxer()
         
         # Update the state of the layer to added

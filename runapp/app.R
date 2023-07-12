@@ -697,7 +697,11 @@ tabPanel(#icon = icon("new-window", lib =  "glyphicon"),
                                         selectInput("selectColumnValue", "Select Value:",
                                                     choices =  "",multiple=TRUE)
                                         ),
-                                        actionButton("query",("Query")),
+                                    
+                                          actionButton("query",("Query")),
+                                          actionButton("resetQuery",("Reset Query")),
+                                          
+                                        
                                       )
                                     ),
                            ),
