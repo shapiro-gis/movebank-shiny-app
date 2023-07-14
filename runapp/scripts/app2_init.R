@@ -34,26 +34,6 @@ app2_init<-function(input,output,session){
 #  gis$show()
   # Check if the data has already been loaded
   if (!data_loaded()) {
-    # Load the GeoJSON data
-    # sf_list <- load_geojson(urls)
-    # 
-    # # Assign each layer to its corresponding variable
-    # MuleDeerCrucialRange <- sf_list[[1]]
-    # MuleDeerHerdUnits <- sf_list[[2]]
-    # MuleDeerSeasonalRange <- sf_list[[3]]
-    # DeerHuntAreas <- sf_list[[4]]
-    # AntelopeHerdUnits <- sf_list[[5]]
-    # AntelopeHuntAreas <- sf_list[[6]]
-    # BisonHerdUnits <- sf_list[[7]]
-    # BisonHuntAreas <- sf_list[[8]]
-    # ElkHerdUnits <- sf_list[[9]]
-    # ElkHuntAreas <- sf_list[[10]]
-    # MooseHerdUnits <- sf_list[[11]]
-    # MooseHuntAreas <- sf_list[[12]]
-    # BighornSheepHerdUnits <- sf_list[[13]]
-    # BighornSheepHuntAreas <- sf_list[[14]]
-    # BioDistricts <- sf_list[[15]]
-    # AdminRegions <- sf_list[[16]]
     
     layerNames <- c(
       "MuleDeerCrucialRange", "MuleDeerHerdUnits", "MuleDeerSeasonalRange", "DeerHuntAreas", 
@@ -114,7 +94,7 @@ app2_init<-function(input,output,session){
     else{
     filtered_data<- movebankData()[movebankData()$studyname == input$selectProject,]
     }
-    updateSelectInput(session, "selectAnimal", choices = sort(filtered_animals()), selected = NULL) 
+    updateSelectInput(session, "selectAnimal", choices =  c("All",sort(filtered_animals())), selected = NULL) 
     updateSelectInput(session, "selectYear", choices = sort(unique(filtered_data$year)), selected = NULL)
     updateDateRangeInput(session, "dateRange", start = min(filtered_data$datetest),
                          end = max(filtered_data$datetest))    
@@ -138,7 +118,7 @@ app2_init<-function(input,output,session){
     req(input$connect)
     w$show()
     movebankData<- combineprojects(MuleDeerHerdUnits,AntelopeHerdUnits,input$shapefileDropdown,DeerHuntAreas,AntelopeHuntAreas,AntelopeSeasonalRange,MuleDeerSeasonalRange,BisonHerdUnits,BisonHuntAreas)
-    updateSelectInput(session, "selectAnimal", choices = sort(unique(movebankData$newuid), decreasing = FALSE), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
+    updateSelectInput(session, "selectAnimal", choices = c("All", sort(unique(movebankData$newuid)), decreasing = FALSE), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
     updateSelectInput(session, "selectProject", choices = c("All",sort(unique(movebankData$studyname ))), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
     updateSelectInput(session, "selectMonth", choices = sort(unique(movebankData$month )), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
     updateSelectInput(session, "selectYear", choices = sort(unique(movebankData$year )), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
@@ -157,10 +137,10 @@ app2_init<-function(input,output,session){
   
   output$myMap <- renderMapdeck({
     mapboxer(center = c(-107.290283,43.075970), 
+            # style = input$basemapStyle, zoom = 5)
              style = 'mapbox://styles/mapbox/outdoors-v11', zoom = 5)
   })
   
-
   
   
   movebankFilter <- eventReactive(input$query,{
@@ -227,8 +207,9 @@ app2_init<-function(input,output,session){
   
   
   ############-------------------- Map --------------------#############
+
   
-  observe( {
+  observe({
     req(movebankData())
     data<- movebankData()
     data<- locationViewer(data)
@@ -236,8 +217,7 @@ app2_init<-function(input,output,session){
     num_colors <- length(unique_values)
     colors <- colorRampPalette(brewer.pal(9, "Set1"))(num_colors)
     color_mapping <- setNames(colors, unique_values)
-    #   
-    #   # Create a new column of hex colors based on the values in the "newuid" column
+
     data$color <- color_mapping[data$newuid]
     
     mapboxer_proxy("myMap") %>%
@@ -272,7 +252,6 @@ app2_init<-function(input,output,session){
     #   # Create a new column of hex colors based on the values in the "newuid" column
     lines$color <- color_mapping[lines$newuid]
     filtered$color <- color_mapping[filtered$newuid]
-
     
     mapboxer_proxy("myMap") %>%
       set_layout_property(
@@ -333,7 +312,7 @@ app2_init<-function(input,output,session){
     
     movebankData<- movebankData()
     
-    updateSelectInput(session, "selectAnimal", choices = sort(unique(movebankData$newuid), decreasing = FALSE), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
+    updateSelectInput(session, "selectAnimal", choices = c("All",sort(unique(movebankData$newuid)), decreasing = FALSE), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
     updateSelectInput(session, "selectProject", choices = c("All",sort(unique(movebankData$studyname ))), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
     updateSelectInput(session, "selectMonth", choices = sort(unique(movebankData$month )), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)
     updateSelectInput(session, "selectYear", choices = sort(unique(movebankData$year )), selected = NULL) #c("All", sort(unique(data$tag.local.identifier))), selected = NULL)

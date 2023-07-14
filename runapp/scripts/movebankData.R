@@ -9,7 +9,7 @@ app2MovebankFolder<<- function(){
 addShapefileDropdown <- function() {
   
   # Find all shapefiles in the folder
-  shapefiles <- list.files(app2MovebankFolder(), pattern="\\.shp$", full.names=TRUE)
+  shapefiles <- list.files(app2MovebankFolder(), pattern="\\.rds$", full.names=TRUE)
   
   # Read the shapefiles and extract their names
   shapefile_names <- lapply(shapefiles, function(file_path) {
@@ -26,17 +26,27 @@ addShapefileDropdown <- function() {
 
 combineprojects <- function(MuleDeerHerdUnits, AntelopeHerdUnits, inputShapefile, DeerHuntAreas, AntelopeHuntAreas, AntelopeSeasonalRange, MuleDeerSeasonalRange, BisonHerdUnits, BisonHuntAreas) {
   shapefile_names <- as.character(inputShapefile)
-  pattern <- paste0("^(", paste(shapefile_names, collapse = "|"), ")\\.shp$")
+  pattern <- paste0("^(", paste(shapefile_names, collapse = "|"), ")\\.rds$")
   file_list <- list.files(app2MovebankFolder(), pattern = pattern, full.names = TRUE)
   
   combined_sf <- lapply(file_list, function(file_path) {
-    sf_object <- st_read(file_path)
-    sf_object$filename <- gsub(".shp", "", basename(file_path))
+    
+    #Read in file
+    sf_object <- readRDS(file_path)
+    #sf_object <- st_read(file_path) ## Use for shapefiles
+    sf_object$filename <- gsub(".rds", "", basename(file_path))
+    
+    #Conver to sf object for spatial joins
+    sf_object <- sf::st_as_sf(sf_object)
     sf_object <- st_transform(sf_object, "+init=EPSG:4326")
+    
+    #Change to lowercase to standardize field names
     names(sf_object) <- tolower(names(sf_object))
     sf_object <- sf_object[, c("newuid", "species", "studyname", "lat", "lon", "datetest", "problem", "mortality", "dt", "dist", "burst", "speed", "id_yr", "nsdoverall")]
     sf_object$newuid <- as.character(sf_object$newuid)
+    
     ids <- unique(sf_object$species)
+    
     for (id in ids) {
       if (!is.na(id) && startsWith(id, "Antilo")) {
         sf_object <- st_join(sf_object, AntelopeHerdUnits[, "HERDNAME"], join = st_within)

@@ -148,7 +148,11 @@ app1_init<-function(input,output,session){
     layername = unique(importedDatasetMaster$studyname)
     
     output_shapefile <- normalizePath(file.path(MovebankFolder(), paste0(layername, ".shp")))
-        writeOGR(importedDatasetMaster, dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
+    #writeOGR(importedDatasetMaster, dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
+    
+    output_rds <- normalizePath(file.path(MovebankFolder(), paste0(layername, ".rds")))
+    saveRDS(importedDatasetMaster, file = output_rds)
+    
    w$hide()
      removeModal()
     updateTabsetPanel(session, "navibar",selected = "mapviewer")
