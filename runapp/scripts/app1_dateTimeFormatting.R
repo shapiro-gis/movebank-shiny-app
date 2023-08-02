@@ -401,10 +401,12 @@ processDates<-function(){
         }
         newDateTime<<-paste(newDate,newTime,sep=" ")
         combineDateElements(newDateTime)
+
       }
     }
 
 
+    
   }
 
   combineDateElements<-function(newDateTime){
@@ -419,6 +421,7 @@ processDates<-function(){
     }
 
     importedDatasetMaster$dateTest<<-newDateTime
+    
 
     importedDatasetMaster@data$newMasterDate<<-tryCatch({
       as.POSIXct(strptime(
@@ -439,22 +442,24 @@ processDates<-function(){
     # #Add begin date field
     unique_ids <- unique(importedDatasetMaster$newUid)
     
-    importedDatasetMaster$start_date <- as.POSIXct(NA)
+    importedDatasetMaster$start_date <<- as.POSIXct(NA)
     
     for (uid in unique_ids) {
-      subset_data <- importedDatasetMaster[importedDatasetMaster$newUid == uid, ]
-      min_start_date <- min(subset_data$newMasterDate)
-      importedDatasetMaster$start_date[importedDatasetMaster$newUid == uid] <- min_start_date
+      subset_data <<- importedDatasetMaster[importedDatasetMaster$newUid == uid, ]
+      min_start_date <<- min(subset_data$newMasterDate)
+      importedDatasetMaster$start_date[importedDatasetMaster$newUid == uid] <<- min_start_date
     }
+    
+
     
     #Add end date field
-    importedDatasetMaster$end_date <- as.POSIXct(NA)
-    
+    importedDatasetMaster$end_date <<- as.POSIXct(NA)
     for (uid in unique_ids) {
-      subset_data <- importedDatasetMaster[importedDatasetMaster$newUid == uid, ]
-      max_end_date <- min(subset_data$newMasterDate)
-      importedDatasetMaster$end_date[importedDatasetMaster$newUid == uid] <- max_end_date
+      subset_data <<- importedDatasetMaster[importedDatasetMaster$newUid == uid, ]
+      max_end_date <<- max(subset_data$newMasterDate)
+      importedDatasetMaster$end_date[importedDatasetMaster$newUid == uid] <<- max_end_date
     }
+    
     naDatesLength<<-nrow(importedDatasetMaster@data[is.na(as.Date(importedDatasetMaster@data$newMasterDate)),])
     configOptions$naDates<<-NULL
     configOptions$naDatesLength<<-naDatesLength
@@ -478,6 +483,7 @@ processDates<-function(){
         #progressIndicator('Done importing dates','stop')
         createUniqueIdsHanlder()
       }
+    
   }
 
 

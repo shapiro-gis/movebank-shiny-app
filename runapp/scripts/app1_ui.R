@@ -122,12 +122,68 @@ app1_init<-function(input,output,session){
       title = "Are you sure you're done cleaning all movement data for this project?",
       "Click below to confirm",
       footer = tagList(
+        
         actionButton("confirmBtn", "Confirm", class = "btn-primary"),
         modalButton("Cancel")
       )
     ))
     
   })
+  
+  observeEvent(input$animalTable, {
+    w <- Waiter$new(
+      html = tagList(
+        spin_3(),
+        h4("Exporting data...", style = "color: grey") # Add style attribute to h4 element
+      ),
+      color = transparent(.5)
+    )
+    
+    w$show()
+    df <- data.frame(importedDatasetMaster)
+    # Group by 'newuid' and summarize startdate and enddate
+    grouped_df <- df %>%
+      group_by(newUid) %>%
+      summarize(deploy_on_date = first(start_date),
+                deploy_off_date = last(end_date),
+                animal_taxon = unique(species),
+                studyname = unique(studyname),
+                sex = unique(sex))
+    output_csv <- normalizePath(file.path(MovebankFolder(), paste0("movebank_reference_data.csv")))
+    write.csv(grouped_df, file = output_csv, row.names = FALSE)
+    shinyalert("Success!", paste0("Your reference table was written to the following location:", output_csv), type = "success")
+    
+    
+  w$hide()
+  
+  })
+  
+  observeEvent(input$animalTable, {
+    w <- Waiter$new(
+      html = tagList(
+        spin_3(),
+        h4("Exporting data...", style = "color: grey") # Add style attribute to h4 element
+      ),
+      color = transparent(.5)
+    )
+    
+    w$show()
+    df <- data.frame(importedDatasetMaster)
+    df <- subset(df, select = c("lat", "lon", "datetest", "problem", "mortality", "newuid", "species"))
+    
+
+    output_csv <- normalizePath(file.path(MovebankFolder(), paste0( "movebank_gps_data.csv")))
+    write.csv(df, file = output_csv, row.names = FALSE)
+    shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile), type = "success")
+    
+    
+    w$hide()
+    
+  })
+  
+  
+
+  
   observeEvent(input$confirmBtn, {
     w <- Waiter$new(
       html = tagList(
@@ -141,7 +197,7 @@ app1_init<-function(input,output,session){
     names(importedDatasetMaster) <- tolower(names(importedDatasetMaster))  # Convert colnames to lowercase
      print(names(importedDatasetMaster))
     
-    requiredFields <- c("newuid", "species","studyname", "lat", "lon", "datetest", "problem", "mortality", "dt", "dist","burst","speed","id_yr","nsdoverall")
+    requiredFields <- c("newuid", "species","studyname", "lat", "lon", "datetest", "problem", "mortality", "dt", "dist","burst","speed","id_yr","nsdoverall", "start_date", "end_date")
     
     importedDatasetMaster <- importedDatasetMaster[, requiredFields]
     
@@ -154,11 +210,36 @@ app1_init<-function(input,output,session){
     saveRDS(importedDatasetMaster, file = output_rds)
     
    w$hide()
-     removeModal()
+
+   showModal(modalDialog(
+     title = "Select an option below",
+     "When preparing data for Movebank upload, you need to download two tables: the reference table and the GPS table. These tables are in a CSV file format and when downloaded, are stored within the Movebank folder in the app's root directory.
+     
+      The reference table contains information about unique individuals and their deployment dates. It is used to associate animals with the movement data in the Movebank database.
+     Make sure you have both tables downloaded for a successful data upload to Movebank",
+     br(),
+     br(),
+     fluidRow(
+       column(6, actionButton("animalTable", "Download Reference Table", class = "btn-primary")),
+       column(6, actionButton("gpsTable", "Download GPS Table", class = "btn-primary"))
+     ),
+     
+     footer = tagList(
+
+       actionButton("mapViewer", "Go to Map Viewer", class = "btn-primary"),
+       modalButton("Cancel")
+     )
+   ))
+
+
+  })
+  observeEvent(input$mapViewer,{
+    removeModal()
+    
     updateTabsetPanel(session, "navibar",selected = "mapviewer")
     
   })
-  
+
 
   observeEvent(input$maxSpeedSelector,{
       configOptions$maxSpeedParameter<<-input$maxSpeedSelector

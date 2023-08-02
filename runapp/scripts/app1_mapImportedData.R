@@ -153,8 +153,13 @@ mapInit<-function(){
     #plotData()
   })
 
+  
+
+
   renderMap();
   delay(2500,showMortalityProblemBox())
+  
+
 
 }
 
@@ -198,12 +203,38 @@ getAnimalYearAverages <- function() {
   selectedYear <<- NULL  # Initialize selectedYear with a default value
   
   updateSelectInput(session, 'yearSelector', label = NULL, choices = c('All Years', animalYears()), selected = selectedYear)
-  #updateDateInput(session,'beingDate',label = NULL, value = importedDatasetMaster$start_date)
+  
+  uniqueMinDate <- reactive({
+    req(!is.null(importedDatasetMaster))
+    req(!is.null(input$individualsSelector))
+    
+    filteredData <- importedDatasetMaster@data[importedDatasetMaster@data$newUid == selectedAnimal, ]
+    uniqueMinDate <- unique(filteredData$start_date)
+    return(uniqueMinDate)
+  })
+  
+  uniqueMaxDate <- reactive({
+    req(!is.null(importedDatasetMaster))
+    req(!is.null(input$individualsSelector))
+    
+    filteredData <- importedDatasetMaster@data[importedDatasetMaster@data$newUid == selectedAnimal, ]
+    uniqueMaxDate <- unique(filteredData$end_date)
+    return(uniqueMaxDate)
+  })
+  
+
+  updateDateInput(session, 'beginDate', label = NULL, value = uniqueMinDate())
+  updateDateInput(session, 'endDate', label = NULL, value = uniqueMaxDate())
+  
+#  updateDateInput(session,'beginDate',label = NULL, value = min(importedDatasetMaster$dateTest))
   
   observeEvent(input$individualsSelector, {
     selectedAnimal <<- input$individualsSelector
     selectedYear <<- animalYears()[1]   # Update selectedYear based on animalYears
     updateSelectInput(session, 'yearSelector', label = NULL, choices = c('All Years', animalYears()), selected = selectedYear)
+    updateDateInput(session, 'beginDate', label = NULL, value = uniqueMinDate())
+    updateDateInput(session, 'endDate', label = NULL, value = uniqueMaxDate())
+    
     addPointsToMap()
   }, ignoreInit = TRUE)
   
@@ -379,6 +410,42 @@ drawInit<-function(){
 
   '
 )
+  startDate <- reactive({
+    startDate <- input$beginDate
+    return(startDate)
+  })
+  
+  endDate <- reactive({
+    endDate <- input$endDate
+    return(endDate)
+  })
+  
+  observeEvent(input$beginDate, {
+    req(!is.null(input$individualsSelector))
+
+    selectedAnimal <- input$individualsSelector
+    
+    # Retrieve the startDate value from the reactive function
+    start <- startDate()
+    start_posixct <- as.POSIXct(paste0(start, " 00:00:00"))
+    
+    importedDatasetMaster$start_date[importedDatasetMaster$newUid == selectedAnimal] <<- start_posixct
+    saveWorkingFile();
+    
+  })
+  
+  observeEvent(input$endDate, {
+    req(!is.null(input$individualsSelector))
+    
+    selectedAnimal <- input$individualsSelector
+    
+    end <- endDate()
+    end_posixct <- as.POSIXct(paste0(end, " 00:00:00"))
+    importedDatasetMaster$end_date[importedDatasetMaster$newUid == selectedAnimal] <<- end_posixct
+    
+    saveWorkingFile();
+    
+  })
 
 observeEvent(input$manyPointsIsProblemSelector, {
 
@@ -503,16 +570,12 @@ addPointsToMap<-function(){
   }
 
   clearHoverPoint()
-  print(selectedYear)
   if(selectedYear=='All Years'){
-    print(selectedAnimal)
     if(selectedAnimal=='All Individuals'){
       pointsForMap<<-importedDatasetMaster
     }else{
-      print("print 2")
       pointsForMap<<-importedDatasetMaster[which(importedDatasetMaster$newUid==selectedAnimal),]
-      print(pointsForMap)
-      
+
     }
   }else{
     if(selectedAnimal=='All Individuals'){

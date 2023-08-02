@@ -85,7 +85,6 @@ saveSessionInfo<<-function(){
   sessionInfo$masterWorkingDirectory<-masterWorkingDirectory
   sessionInfo$time<-Sys.time()
   saveTo<-paste0(dirname(getwd()),'//session.rds')
-  print(saveTo)
   saveRDS(sessionInfo,saveTo)
 }
 

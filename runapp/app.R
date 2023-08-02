@@ -257,6 +257,7 @@ tabPanel( "Data Cleaning",value = "app1",
            tags$a(href = "https://shapiro-merkle.gitbook.io/wgfd-movebank-guide/app-workflow/part-1-data-cleaning/movebank-download",
                   target = "_blank",
                   "Click here to view instructions"),
+
            br(),
            
                               actionButton("chooseDirButton", "Click to Choose Folder"),
@@ -558,17 +559,17 @@ div(class = "outer",
           )
         )
       ),
-      # fluidRow(
-      #   div(
-      #     style = "display: flex; justify-content: space-between;",
-      #     div(style = "padding: 5px; width: 40%;",
-      #         dateInput('beingDate', 'Choose Start Date of Animal',  c())
-      #     ),
-      #     div(style = "padding: 5px; width: 40%;",
-      #         dateInput('endDate', 'Choose End Date of Animal', c())
-      #     )
-      #   )
-      # ),
+      fluidRow(
+        div(
+          style = "display: flex; justify-content: space-between;",
+          div(style = "padding: 5px; width: 40%;",
+              dateInput('beginDate', 'Animal Start Date',  c())
+          ),
+          div(style = "padding: 5px; width: 40%;",
+              dateInput('endDate', 'Animal End Date', c())
+          )
+        )
+      ),
       fluidRow(
         div(
           class = "btn-group",
@@ -700,7 +701,7 @@ tabPanel(#icon = icon("new-window", lib =  "glyphicon"),
                                     
                                           actionButton("query",("Query")),
                                           actionButton("resetQuery",("Reset Query")),
-                                          
+                                                              
                                         
                                       )
                                     ),
@@ -727,6 +728,24 @@ tabPanel(#icon = icon("new-window", lib =  "glyphicon"),
                                     
                            ))
              ),
+             # absolutePanel(
+             #   id = "controls", class = "panel panel-default", fixed = TRUE,
+             #   draggable = TRUE, top = 70, left = "auto",
+             #   right = "8%", bottom = "auto",
+             #   width = 0, height = 0,
+             #   dropdownButton(
+             #     label = "",
+             #     icon = icon("map"),
+             #     right = TRUE,
+             #     status = "primary",
+             #     circle = TRUE,
+             #     width = 250, 
+             #     selectInput("basemapStyle", "Select Basemap Style",
+             #                 choices = c("Outdoors" = "mapbox://styles/mapbox/outdoors-v11",
+             #                             "Light" = "mapbox://styles/mapbox/light-v10",
+             #                             "Dark" = "mapbox://styles/mapbox/dark-v10"),
+             #                 selected = "mapbox://styles/mapbox/outdoors-v11")
+             #   )),
          
              absolutePanel(
                id = "controls", class = "panel panel-default", fixed = TRUE,
@@ -799,7 +818,7 @@ server <- function(input, output, session) {
     if (input$navibar == "app1" && !app1_initialized()) {
       app1_init(input, output, session)
       
-      elevation<<- raster("/vsicurl/https://pathfinder.arcc.uwyo.edu/devise/MerkleLabGIS/Topo/etopocompressed.tif")
+      elevation<<- raster("/vsicurl/https://pathfinder.arcc.uwyo.edu/devise/MerkleLabGIS/DEM/etopocompressed.tif")
       
       checkForSession('app1')
       hide(id = 'dateTimeRow')
@@ -816,6 +835,11 @@ server <- function(input, output, session) {
     if (input$navibar == "mapviewer") {
       app2_init(input, output, session)
     }
+  })
+  
+  session$onSessionEnded(function() {
+    print("Closing App")
+    stopApp()
   })
 }
 

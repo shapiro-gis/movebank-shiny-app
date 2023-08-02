@@ -42,7 +42,7 @@ combineprojects <- function(MuleDeerHerdUnits, AntelopeHerdUnits, inputShapefile
     
     #Change to lowercase to standardize field names
     names(sf_object) <- tolower(names(sf_object))
-    sf_object <- sf_object[, c("newuid", "species", "studyname", "lat", "lon", "datetest", "problem", "mortality", "dt", "dist", "burst", "speed", "id_yr", "nsdoverall")]
+    #sf_object <- sf_object[, c("newuid", "species", "studyname", "lat", "lon", "datetest", "problem", "mortality", "dt", "dist", "burst", "speed", "id_yr", "nsdoverall")]
     sf_object$newuid <- as.character(sf_object$newuid)
     
     ids <- unique(sf_object$species)
@@ -83,6 +83,11 @@ combineprojects <- function(MuleDeerHerdUnits, AntelopeHerdUnits, inputShapefile
     }
     
     sf_object <- sf_object[sf_object$problem == 0, ]
+    sf_object<-sf_object %>%
+      group_by(newuid) %>%
+      filter(datetest >start_date) %>%
+      filter(datetest <= end_date)
+    
     
     sf_object_first_loc <- sf_object %>% group_by(newuid) %>% filter(row_number() == 1)
     first_loc_herdunit <- unique(sf_object_first_loc[, c("newuid", "herd_unit_col")], by = "newuid")
