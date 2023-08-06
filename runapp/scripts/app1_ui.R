@@ -66,12 +66,21 @@ app1_init<-function(input,output,session){
     )
   },ignoreInit=TRUE)
   
-
+  reload <- Waiter$new(
+    html = tagList(
+      spin_3(),
+      h4("Reloading Project.", style = "color: grey") # Add style attribute to h4 element
+    ),
+    color = transparent(.5)
+  )
+  
 
   observeEvent(input$loadProjectButton,{
       tryCatch({
         rdsLocation <- choose.dir(caption = "select your project folder and press OK")
+        reload$show()
         appOneReload(rdsLocation)
+        reload$hide()
       }, error = function(ex) {
         modalMessager('Error',paste0('Try choosing a file again'))
       })
@@ -130,6 +139,7 @@ app1_init<-function(input,output,session){
     
   })
   
+  
   observeEvent(input$animalTable, {
     w <- Waiter$new(
       html = tagList(
@@ -158,7 +168,7 @@ app1_init<-function(input,output,session){
   
   })
   
-  observeEvent(input$animalTable, {
+  observeEvent(input$gpsTable, {
     w <- Waiter$new(
       html = tagList(
         spin_3(),
@@ -169,12 +179,10 @@ app1_init<-function(input,output,session){
     
     w$show()
     df <- data.frame(importedDatasetMaster)
-    df <- subset(df, select = c("lat", "lon", "datetest", "problem", "mortality", "newuid", "species"))
-    
 
     output_csv <- normalizePath(file.path(MovebankFolder(), paste0( "movebank_gps_data.csv")))
     write.csv(df, file = output_csv, row.names = FALSE)
-    shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile), type = "success")
+    shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_csv), type = "success")
     
     
     w$hide()

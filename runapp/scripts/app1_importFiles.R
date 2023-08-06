@@ -273,15 +273,38 @@ showColumnChoiceInfo<-function(){
   observeEvent(input$speciesSelector, {
     selectedSpeciesField <- input$speciesSelector
     
+    df <- data.frame(
+      val = c("Alces alces", "Antilocapra americana", "Bison bison", "Cervus canadensis", "Odocoileus hemionus", "Puma concolor", "Oreamnos americanus", "Ovis canadensis", "Ursus americanus")
+    )
+    
+    df$img = c(
+      sprintf("<img src='moose.jpg' width=80px><div class='jhr'>%s</div></img>", df$val[1]),
+      sprintf("<img src='pronghorn_icon.jpg' width=80px><div class='jhr'>%s</div></img>", df$val[2]),
+      sprintf("<img src='bison.jpg' width=80px><div class='jhr'>%s</div></img>", df$val[3]),
+      sprintf("<img src='elk_icon.jpg' width=80px><div class='jhr'>%s</div></img>", df$val[4]),
+      sprintf("<img src='muledeer_icon.jpg' width=80px><div class='jhr'>%s</div></img>", df$val[5]),
+      sprintf("<img src='cougar.jpg' width=80px><div class='jhr'>%s</div></img>", df$val[6]),
+      sprintf("<img src='goat.jpg' width=80px><div class='jhr'>%s</div></img>", df$val[7]),
+      sprintf("<img src='bighorn.jpg' width=80px><div class='jhr'>%s</div></img>", df$val[8]),
+      sprintf("<img src='blackbear.jpg' width=80px><div class='jhr'>%s</div></img>", df$val[9])
+      
+    )
+    
+    
     if (selectedSpeciesField == "NaN") {
       showModal(modalDialog(
         title = "Missing Field Value",
-        "Select species type",
-        selectInput(
-          inputId = "customSpeciesInput",
-          label = "individ",
-          choices = c("Alces alces", "Antilocapra americana", "Bison bison", "Cervus canadensis", "Odocoileus hemionus", "Ursus americanus")
-        ),
+      #  "Select species type",
+        pickerInput(inputId = "customSpeciesInput",
+                    label = "Select a species",
+                    choices = df$val,
+                    choicesOpt = list(content = df$img)),
+#         selectInput(
+#           inputId = "customSpeciesInput",
+#           label = "individ",
+#           choices = c("Alces alces", "Antilocapra americana", "Bison bison", "Cervus canadensis", "Odocoileus hemionus", "Puma concolor
+# ", "Oreamnos americanus", "Ovis canadensis", "Ursus americanus")
+#         ),
         footer = tagList(
           actionButton("addValueBtn", "Add Value", class = "btn-primary")
         )
@@ -345,7 +368,9 @@ showColumnChoiceInfo<-function(){
     if (!exists('importedDatasetMaster')) {
       mergeShapfilesHandler()
     } else {
-      newUid <- input$uniqueIdSelectorGo
+      newUid <- input$uniqueIdSelector
+      print("Printing ID field selected")
+      print(input$uniqueIdSelector)
       
       species <- if (!is.null(input$customSpeciesInput)) {
         input$customSpeciesInput
