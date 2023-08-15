@@ -81,7 +81,7 @@ mapInit<-function(){
     mapboxer_proxy("importedDataMapBox") %>%
       set_data(pointsForMap@data,lat="lat",lng='lon','pointsSource')%>%
       update_mapboxer()
-    saveShapefile()
+    #saveShapefile()
 
   },ignoreInit=TRUE)
 

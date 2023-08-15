@@ -71,6 +71,7 @@ app2_init<-function(input,output,session){
     # Set the reactive value to indicate that the data has been loaded
     data_loaded(TRUE)
   }
+
   
   
   
@@ -345,6 +346,33 @@ app2_init<-function(input,output,session){
         value = "none"
       )  %>%
       update_mapboxer()
+    
+    mapboxer_proxy("myMap") %>%
+      set_layout_property(
+        layer_id = "mcpResult",
+        property = "visibility",
+        value = "none"
+      )  %>%
+      update_mapboxer()
+    
+    mapboxer_proxy("myMap") %>%
+      set_layout_property(
+        layer_id = "lineBuffer_result",
+        property = "visibility",
+        value = "none"
+      )  %>%
+      update_mapboxer()
+    
+    
+    mapboxer_proxy("myMap") %>%
+      set_layout_property(
+        layer_id = "kdeResult",
+        property = "visibility",
+        value = "none"
+      )  %>%
+      update_mapboxer()
+    
+    
   })
   
   
@@ -369,53 +397,12 @@ app2_init<-function(input,output,session){
   #     }
   # })
   
-  ## Trackline color toggle
-  # observeEvent(input$color,{
-  #   if (input$color == TRUE) {
-  #     
-  #   req(nrow(movebankFilter()) > 1, "The data must have more than one record.")
-  #     
-  #   lines<- lines()
-  #   
-  #   unique_values <- unique(lines$newuid)
-  #   # Define the number of colors to generate
-  #   num_colors <- length(unique_values)
-  #   colors <- colorRampPalette(brewer.pal(9, "Set1"))(num_colors)
-  #   color_mapping <- setNames(colors, unique_values)
-  #   
-  #   # Create a new column of hex colors based on the values in the "newuid" column
-  #   lines$color <- color_mapping[lines$newuid]
-  #   
-  #   mapdeck_update(map_id = "myMap") %>%
-  #     
-  #     add_path(
-  #       data = lines,
-  #       stroke_width = 50,
-  #       stroke_colour = "color",
-  #       layer_id = "colortracks"
-  #     )  %>% 
-  #     add_scatterplot(
-  #       data = movebankFilter(),
-  #       lat = "lat",
-  #       lon = "lon",
-  #        radius_min_pixels = 2,
-  #       stroke_colour = "black",
-  #       stroke_width = 1,
-  #       tooltip = c("datetest", "newuid"),
-  #       auto_highlight = TRUE,
-  #       update_view = FALSE
-  #     )
-  #   } else {
-  #     mapdeck_update(map_id = "myMap") %>%
-  #       clear_path(layer_id = "colortracks")
-  #   }
-  #   
-  # })
-  # 
+
   
   ## GIS Layers
   # Initial state of the layer is not added
   MuleDeerCrucialRange_layer_added <- reactiveVal(FALSE)
+
   
   observeEvent(input$MuleDeerCrucialRange, {
     map_proxy <- mapboxer_proxy("myMap")
@@ -478,7 +465,8 @@ app2_init<-function(input,output,session){
         # If the layer wasn't previously added, add it and make it visible
         map_proxy %>%
           add_source(as_mapbox_source(MuleDeerHerdUnits), 'MuleDeerHerdUnits') %>%
-          add_fill_layer(source = 'MuleDeerHerdUnits', id = "MuleDeerHerdUnits", fill_color = "blue", fill_opacity = 0.2, popup = "{{MD_HERDNAME}}") %>%
+          add_fill_layer(source = 'MuleDeerHerdUnits', id = "MuleDeerHerdUnits", fill_color = "blue",
+                         fill_opacity = 0.2, popup = "{{MD_HERDNAME}}") %>%
           update_mapboxer()
         
         # Update the state of the layer to added
@@ -1019,7 +1007,6 @@ app2_init<-function(input,output,session){
     }
   })
   
-  
 
   BioDistricts_layer_added <- reactiveVal(FALSE)
   
@@ -1061,6 +1048,47 @@ app2_init<-function(input,output,session){
     }
   })
 
+  
+  # observeEvent(input$addMCP,{
+  #   removeModal() 
+  #   
+  #   mcpResult<- mcp_result()
+  #   mcpResult <- sf::st_as_sf(mcpResult)
+  #   print(mcpResult)
+  #   
+  #   map_proxy <- mapboxer_proxy("myMap")
+  #   map_proxy %>%
+  #     add_source(as_mapbox_source(mcpResult), 'mcpResult') %>%
+  #     add_fill_layer(source = 'mcpResult', id = "mcpResult", fill_color = "blue", fill_opacity = 0.5) %>%
+  #     update_mapboxer()
+  # 
+  # })
+  
+  # observeEvent(input$addLineBuffer,{
+  #   lineBuffer_result <- lineBuffer_result()
+  #   lineBuffer_result <- sf::st_as_sf(lineBuffer_result)
+  #   
+  #   map_proxy <- mapboxer_proxy("myMap")
+  #   map_proxy %>%
+  #     add_source(as_mapbox_source(lineBuffer_result), 'lineBuffer_result') %>%
+  #     add_fill_layer(source = 'lineBuffer_result', id = "lineBuffer_result", fill_color = "blue", fill_opacity = 0.5) %>%
+  #     update_mapboxer()
+  #   
+  # })
+  # 
+  # observeEvent(input$addKDE,{
+  #   kdeResult<- kde_result()
+  #   kdeResult <- sf::st_as_sf(kdeResult)
+  #   
+  #   map_proxy <- mapboxer_proxy("myMap")
+  #   map_proxy %>%
+  #     add_source(as_mapbox_source(kdeResult), 'kdeResult') %>%
+  #     add_fill_layer(source = 'kdeResult', id = "kdeResult", fill_color = "blue", fill_opacity = 0.5) %>%
+  #     update_mapboxer()
+  #   
+  # })
+  
+
 
 
 ############-------------------- Export Results --------------------#############
@@ -1091,6 +1119,7 @@ app2_init<-function(input,output,session){
     ))
   })
   
+  
   observeEvent(input$exportSample,{
     data <- movebankFilter()
     data<- exportSamplePoints(data,input$selectInterval)
@@ -1102,12 +1131,17 @@ app2_init<-function(input,output,session){
     output_shapefile <- normalizePath(file.path(exportQuery(), paste0(layername, ".shp")))
     writeOGR(spdf, dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
     shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile), type = "success")
-    removeModal()
   }) 
+  
+  
   
   observeEvent(input$exportLines,{
     lines <- lines()
+    projection_string <- "+proj=longlat +datum=WGS84"
+    
     lines_sf <- sf::st_as_sf(lines)
+    lines_sf <- st_set_crs(lines_sf, projection_string)
+    
     lines_spatial <- sf::as_Spatial(lines_sf)
     
     layername = input$fileNameQuery
@@ -1115,7 +1149,7 @@ app2_init<-function(input,output,session){
     writeOGR(lines_spatial, dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
     
     shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile ), type = "success")
-    
+
   }) 
   
   
@@ -1135,6 +1169,8 @@ app2_init<-function(input,output,session){
           width = 10,
           HTML("<strong>MCP:</strong> Create Minimum Convex Polygon(MCP) of the movement data. These are the simplest areas defined by the outside extent of the data points.")
         ),
+        #prettySwitch("allIndvMCP", strong("Select Features Within:"), FALSE),
+        
         column(
           width = 2,
           align = "center",
@@ -1185,36 +1221,50 @@ app2_init<-function(input,output,session){
   
     
     
-  kernlUD <- function(data){
-    data$datetest <- as.POSIXct(data$datetest, tz = "MST", format = "%Y-%m-%d %H:%M:%S")
-    datapoints<-SpatialPoints(cbind(data$lon,data$lat))
-    
-    #KDE
-    kud <- kernelUD(datapoints,h = "href") #kernel density utilization distribution (h=smoothing factor)
-    image(kud)
-    homerange99 <- getverticeshr(kud, percent=99) #convert into vector object, use 75,50,25 for quartic kernel
-    homerange95 <- getverticeshr(kud, percent=95) #convert into vector object, use 75,50,25 for quartic kernel
-    homerange90 <- getverticeshr(kud, percent=90) #convert into vector object, use 75,50,25 for quartic kernel
-    homerange75 <- getverticeshr(kud, percent=75) #convert into vector object, use 75,50,25 for quartic kernel
-    homerange50 <- getverticeshr(kud, percent=50) #convert into vector object, use 75,50,25 for quartic kernel
-    homerange25 <- getverticeshr(kud, percent=25) #convert into vector object, use 75,50,25 for quartic kernel
-    
-    combined_vertices <- rbind(homerange99,homerange95, homerange90,homerange75,homerange50,homerange25)
-    output$plotKUD <- renderLeaflet({
-      leaflet(combined_vertices) %>%
-        addTiles() %>%
-        addPolygons(fillColor = "red", weight = 2)
+  kernlUD <- function(data) {
+    tryCatch({
+      data$datetest <- as.POSIXct(data$datetest, tz = "MST", format = "%Y-%m-%d %H:%M:%S")
+     # datapoints <- SpatialPoints(cbind(data$lon, data$lat))
+      
+      datapoints <- SpatialPoints(cbind(data$lon, data$lat), proj4string=CRS("+proj=longlat +datum=WGS84"))
+      datapoints_transformed <- spTransform(datapoints, CRS("+init=epsg:5072"))  
+      
+      # KDE
+      kud <- kernelUD(datapoints_transformed, h = "href") # kernel density utilization distribution (h = smoothing factor)
+      image(kud)
+      homerange99 <- getverticeshr(kud, percent = 99)
+      homerange95 <- getverticeshr(kud, percent = 95) 
+      homerange90 <- getverticeshr(kud, percent = 90) 
+      homerange75 <- getverticeshr(kud, percent = 75)
+      homerange50 <- getverticeshr(kud, percent = 50) 
+      homerange25 <- getverticeshr(kud, percent = 25) 
+      
+      homerange99$percent <- 99
+      homerange95$percent <- 95
+      homerange90$percent <- 90
+      homerange75$percent <- 75
+      homerange50$percent <- 50
+      homerange25$percent <- 25
+      
+      combined_vertices <- rbind(homerange99, homerange95, homerange90, homerange75, homerange50, homerange25)
+      
+      output$plotKUD <- renderLeaflet({
+        kdemap<- spTransform(combined_vertices, CRS("+proj=longlat +datum=WGS84"))
+        
+        leaflet(kdemap) %>%
+          addTiles() %>%
+          addPolygons(fillColor = "red", weight = 2)
+      })
+      
+     # proj4string(combined_vertices) <- CRS("+proj=longlat +datum=WGS84")
+      
+      kde_result(combined_vertices) # Store MCP result in a reactive value
+      
+    }, 
+    error = function(e) {
+      cat("Error occurred during the execution of kernlUD:", conditionMessage(e), "\n")
+      return(NULL)
     })
-    proj4string(combined_vertices) <- CRS("+proj=longlat +datum=WGS84")
-    
-    kde_result(combined_vertices)  # Store MCP result in reactive value
-    
-    print(proj4string(combined_vertices))
-    
-    #proj4string(WGScoor)<- CRS("+proj=longlat +datum=WGS84")
-
-    #coordinates(data) <- ~ lon + lat
-    #ltraj <- as.ltraj(xy= coordinates(data),date=data$datetest,id=data$newuid, typeII=TRUE)
   }
   
   kde_result <- reactiveVal() 
@@ -1238,38 +1288,106 @@ app2_init<-function(input,output,session){
   
   observeEvent(input$exportKDE,{
     kdeResult<- kde_result()
+    proj4string(kdeResult) <- CRS("+init=epsg:5072")
     
     layername = input$kdeFileName
     output_shapefile <- normalizePath(file.path(exportQuery(), paste0(layername, ".shp")))
     writeOGR( kdeResult , dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
     shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile ), type = "success")
-    
+    # showModal(modalDialog(
+    #   title="Do you want to add results to the map?",
+    #   footer = tagList(
+    #     actionButton("addKDE","Yes"),
+    #     
+    #     modalButton("Cancel")
+    #   )
+    # ))
+    removeModal()
   }) 
   
-  mcp_result <- reactiveVal()  # Reactive value to store MCP result
-  
+   mcp_result <- reactiveVal()  # Reactive value to store MCP result
+  # 
+  # 
+  # calculateMCP <- function(data){
+  #   datapoints<-SpatialPoints(cbind(data$lon,data$lat))
+  # 
+  #   #MCP
+  #   datapoints.mcp <- mcp(datapoints, percent = 95)
+  #   output$plotMCP <- renderLeaflet({
+  #     leaflet(datapoints.mcp) %>%
+  #       addTiles() %>%
+  #       addPolygons(fillColor = "red", weight = 2)
+  #   })
+  #   proj4string(datapoints.mcp) <- CRS("+proj=longlat +datum=WGS84")
+  # 
+  #   mcp_result(datapoints.mcp)  # Store MCP result in reactive value
+  # 
+  #   print(proj4string(datapoints.mcp))
+  #   print(class(datapoints.mcp))
+  # }
 
-  calculateMCP <- function(data){
-    datapoints<-SpatialPoints(cbind(data$lon,data$lat))
+  calculateMCP <- function(data) {
+  #  mcp_result(NULL)
+    
+    split_data <- split(data, data$newuid)
+    
+    mcp_results <- lapply(split_data, function(animal_data) {
+    #  datapoints <- SpatialPoints(cbind(animal_data$lon, animal_data$lat))
+      datapoints <- SpatialPoints(cbind(animal_data$lon, animal_data$lat), proj4string=CRS("+proj=longlat +datum=WGS84"))
+      
+      datapoints_transformed <- spTransform(datapoints, CRS("+init=epsg:5072"))
+      
+      datapoints.mcp <- mcp(datapoints_transformed, percent = 95)
+      datapoints.mcp@data$area <- round(datapoints.mcp@data$area, 1)
+      
+    #  proj4string(datapoints.mcp) <- CRS("+proj=longlat +datum=WGS84")
 
-    #MCP
-    datapoints.mcp <- mcp(datapoints, percent = 95)
-    output$plotMCP <- renderLeaflet({
-      leaflet(datapoints.mcp) %>%
-        addTiles() %>%
-        addPolygons(fillColor = "red", weight = 2)
+      newuid_value <- unique(animal_data$newuid)
+      attr(datapoints.mcp, "newuid") <- as.character(newuid_value)
+      datapoints.mcp@data$id <- as.character(newuid_value)
+      
+      
+      return(datapoints.mcp)
     })
-    proj4string(datapoints.mcp) <- CRS("+proj=longlat +datum=WGS84")
     
-    mcp_result(datapoints.mcp)  # Store MCP result in reactive value
+    # Combine all MCP results into a single SpatialPolygonsDataFrame
+    mcp_result_combined <- do.call("rbind", mcp_results)
     
-    print(proj4string(datapoints.mcp))
-    
+      output$plotMCP <- renderLeaflet({
+      m <- leaflet() %>% addTiles()
+      mcp_results_wgs84 <- lapply(mcp_results, function(mcp) {
+        spTransform(mcp, CRS("+proj=longlat +datum=WGS84"))
+      })
+      
+      for (i in seq_along(mcp_results_wgs84)) {
+        m <- m %>% addPolygons(data = mcp_results_wgs84[[i]], fillColor = "red", weight = 2)
+      }
+      
+      return(m)
+      })
+      
+        mcp_result(mcp_result_combined)
+        print(mcp_result)
+        return(mcp_result)
   }
+
+
+
+  
+  
+  mcp <- Waiter$new(
+    html = tagList(
+      spin_3(),
+      h4("Calculating MCP", style = "color: grey") # Add style attribute to h4 element
+    ),
+    color = transparent(.5)
+  )
   
   observeEvent(input$runMCP,{
+    mcp$show()
     data <- movebankFilter()
     calculateMCP(data)
+    mcp$hide()
     showModal(modalDialog(
       title="MCP 95%",
       use_bs_popover(),
@@ -1278,23 +1396,24 @@ app2_init<-function(input,output,session){
                 value = ""),
       footer = tagList(
         actionButton("exportMCP","Export MCP"),
-        
         modalButton("Cancel")
       )
     ))
 
   })
+
   
   observeEvent(input$exportMCP,{
      mcpResult<- mcp_result()
-    
+     proj4string(mcpResult) <- CRS("+init=epsg:5072")
+     
     layername = input$mcpFileName
     output_shapefile <- normalizePath(file.path(exportQuery(), paste0(layername, ".shp")))
     writeOGR( mcpResult , dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
     shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile ), type = "success")
-    
-  }) 
-  
+    removeModal()
+  })
+
   
   
   lineBuffer_result <- reactiveVal()  # Reactive value to store MCP result
@@ -1307,8 +1426,8 @@ app2_init<-function(input,output,session){
     }    
     # Convert movebankFilter to an sf object
     data <- sf::st_as_sf(data, coords = c("lon", "lat"), crs = 4326, remove = FALSE)
-    #movebankFilter_sf <- st_transform(movebankFilter_sf, "+init=EPSG:4326")
-    
+    data <- st_transform(data, "+init=EPSG:5072")
+
     drops <- c("geometry.y") # list of col names
     data <- data[,!(names(data) %in% drops)]
     
@@ -1347,11 +1466,13 @@ app2_init<-function(input,output,session){
     }
     output_sf <- st_as_sf(output_data)
     #output_sf <- st_geometry(output_sf)
+    output_sf <- output_sf[st_geometry_type(output_sf) %in% c("POLYGON", "MULTIPOLYGON"), ]
     
-    #output_spdf <- as_Spatial(output_sf)
-    
+
     output$plotLineBuffer <- renderLeaflet({
-      leaflet(output_sf) %>%
+      lineBuffer_map <- st_transform(output_sf, "+init=EPSG:4326")
+      
+      leaflet(lineBuffer_map) %>%
         addTiles() %>%
         addPolygons(fillColor = "red", weight = 2)
     })
@@ -1386,24 +1507,19 @@ app2_init<-function(input,output,session){
     
   })
   
-# observeEvent(input$exportLineBuffer, {
-#   lineBuffer_result <- lineBuffer_result()
-#   print("Printing Line buffer results")
-#   print(lineBuffer_result)
-#   layername <- input$lineBufferFileName
-#   output_shapefile <- normalizePath(file.path(exportQuery(), paste0(layername, ".shp")))
-#   st_write(lineBuffer_result, output_shapefile)
-#   shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile), type = "success")
-# })
+
   observeEvent(input$exportLineBuffer, {
     lineBuffer_result <- lineBuffer_result()
-    print("Printing Line buffer results")
-    print(lineBuffer_result)
+    lineBuffer_result <- st_transform(lineBuffer_result, "+init=EPSG:5072")
+    
     layername <- input$lineBufferFileName
     output_shapefile <- normalizePath(file.path(exportQuery(), paste0(layername, ".shp")))
-    st_write(lineBuffer_result, output_shapefile)
+    st_write(lineBuffer_result, output_shapefile, append = FALSE)
     shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_shapefile), type = "success")
-  })
+    
+    removeModal()
+    })
+
   
   
 }
