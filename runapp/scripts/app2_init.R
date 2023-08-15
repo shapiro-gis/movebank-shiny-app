@@ -7,7 +7,7 @@ app2_init<-function(input,output,session){
     print(dropdown_options)
     
     if (length(dropdown_options) == 0) {
-      shinyalert("Oops!", "No movebank projects were found. Please return to the Data Cleaning tab and clean Movebank data first.", type = "error")
+      shinyalert("Oops!", "No Movebank projects were found. Please return to the Data Cleaning tab and clean Movebank data first.", type = "error")
     } else {
       updateSelectInput(session, "shapefileDropdown", choices = dropdown_options)
     }
