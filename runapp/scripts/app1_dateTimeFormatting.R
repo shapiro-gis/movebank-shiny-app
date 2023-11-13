@@ -1,6 +1,5 @@
 showDateTimeSelectionPanel<-function(){
   hide(id='uidSeletorRow',anim=TRUE)
-  print('showing date time')
   if(thisIsTestingRun){
     hasObjectsHandler()
   }
@@ -9,14 +8,12 @@ showDateTimeSelectionPanel<-function(){
 
   ##------------------ add to date columns whenever one is selected
     observeEvent(input$dateColumnSelector, {
-      print('date column select change')
       dateColumns <<- input$dateColumnSelector
-      print(dateColumns)
-      print("Printing Class")
-      print(class(dateColumns))
     })
 
-    observeEvent(input$doneChoosingDateColumnsButton,{
+    observe({
+      req(input$dateColumnSelector)
+   # observeEvent(input$doneChoosingDateColumnsButton,{
       processDates();
       })
 
@@ -104,8 +101,7 @@ processDates<-function(){
         newOrderedChoices<-c(includedDateTimeElements,excludedDateTimeElements)
 
         # updateSelectInput(session, tempSelectorName, label = NULL, selected = selectedColumns,newOrderedChoices)
-        print('rendering ')
-        print(tempSelectorName)
+
         output[[tempVar]] <- renderUI({
           selectInput(
             tempSelectorName,
@@ -123,8 +119,7 @@ processDates<-function(){
     }
   } else{
     selectedColumns<-NULL
-    print('rendering ')
-    print(tempSelectorName)
+
     output[[tempVar]] <- renderUI({
       selectInput(
         tempSelectorName,
@@ -299,8 +294,7 @@ processDates<-function(){
       # assign back to the temp holder just the correct index
       # of that date time element
       assign(selectedDateTimeElements[j],sapply(tempDateDataObjSplt,"[[",tempIndexOfLoc))
-      print("Printing selected date time elements")
-      print(selectedDateTimeElements)
+
       if(j==validatorsLength){
         if(!exists('year')){
           modalMessager('ERROR','no year')
@@ -376,8 +370,7 @@ processDates<-function(){
           selectedDateTimeElements <- c(selectedDateTimeElements, "second")
           second <- "00"
         }
-        print("Printing fixed date time elements")
-        print(selectedDateTimeElements)
+     
         
         checkForDec(year,'year')
         checkForDec(month,'month')

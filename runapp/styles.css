@@ -70,9 +70,9 @@ html,body{
 
 .landing-wrapper .landing-block{
     width: 100%;
-    height: 80vh;
+    height: 100%;
 }
-
+/*
 .landing-wrapper .background-content{
     display: grid;
     grid-template-columns: 50% 50%;
@@ -83,6 +83,17 @@ html,body{
 .landing-wrapper .background-content img{
     display: block;
     width: 100%;
+} */
+
+.landing-wrapper .background-content{
+    display: block;  // Change the display to block
+}
+
+.landing-wrapper .background-content img{
+    display: block;
+    width: 100%;
+    height: 100%;   
+    object-fit: cover; 
 }
 
 .landing-wrapper .foreground-content{
@@ -98,15 +109,26 @@ html,body{
     width: 50%;
     padding: 5%;
     color: black;
-    background-color: rgba(255, 255, 255, 0.93); /* Adjust the alpha value as needed */
+    background-color: rgba(255, 255, 255, 0.89); /* Adjust the alpha value as needed */
     text-align: center;
 }
 
 .landing-wrapper .foreground-content .foreground-text h1{font-size: 4rem;}
 .landing-wrapper .foreground-content .foreground-text p{font-size: 1.5rem;}
-
+         .padded-screen {
+                        padding: 50px;
+                    }
+.btn.btn-default.prev-screen {
+                              padding: 10px 20px;
+                              margin: 20px;}
+                              
+       .btn.btn-primary.next-screen {
+                              padding: 10px 20px;  /* adjust the padding as needed */
+                              margin: 20px;       /* adjust the margin as needed */
+                          }
   
 /* .navbar {
     background-color: #ceceb4;
   }
+  
   

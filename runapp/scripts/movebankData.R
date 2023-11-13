@@ -36,7 +36,7 @@ combineprojects <- function(MuleDeerHerdUnits, AntelopeHerdUnits, inputShapefile
     #sf_object <- st_read(file_path) ## Use for shapefiles
     sf_object$filename <- gsub(".rds", "", basename(file_path))
     
-    #Conver to sf object for spatial joins
+    #Convert to sf object for spatial joins
     sf_object <- sf::st_as_sf(sf_object)
     sf_object <- st_transform(sf_object, "+init=EPSG:4326")
     
@@ -76,9 +76,7 @@ combineprojects <- function(MuleDeerHerdUnits, AntelopeHerdUnits, inputShapefile
         colnames(sf_object)[colnames(sf_object) == "HERDNAME"] <- "herd_unit_col"
         
       } else {
-        sf_object <- st_join(sf_object, MuleDeerHerdUnits[, "MD_HERDNAME"], join = st_within)
-        colnames(sf_object)[colnames(sf_object) == "MD_HERDNAME"] <- "herd_unit_col"
-        
+        sf_object$herd_unit_col <- NA  # Setting the column value to NA when none of the conditions are met
       }
     }
     
@@ -93,7 +91,7 @@ combineprojects <- function(MuleDeerHerdUnits, AntelopeHerdUnits, inputShapefile
     first_loc_herdunit <- unique(sf_object_first_loc[, c("newuid", "herd_unit_col")], by = "newuid")
     colnames(first_loc_herdunit)[2] <- "first_loc_herdunit_name"
     sf_object <- left_join(sf_object, first_loc_herdunit, by = "newuid")
-    
+
     return(sf_object)
   })
   

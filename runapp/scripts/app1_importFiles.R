@@ -166,68 +166,31 @@ showFilesUploadedIndicator<-function(){
 showWorkingDirectorySelect<-function(){
   hideElement(id = 'importDataRow', anim = TRUE)
   showElement(id = 'folderSelectSection', anim = TRUE)
-  
+  showElement(id = 'glideContent' )
+
   hide('loadProjectButton')
   show('exportDataButton')
   output$workingDirectoryTitle<-renderUI({
-    HTML('<strong>(2) Click the button below to choose and empty Project Folder where all outputs will be stored.</strong>')
+    HTML('Click the button below to choose and empty Project Folder where data cleaning outputs will be stored.')
   })
   
   output$chooseWorkingDirButton<-renderUI({
-    actionButton("chooseWorkingDirButton", "Click to Choose Directory")
+    shinyDirButton('chooseWorkingDirButton', 'Select a directory', title='Select a directory')
+    
+   # actionButton("chooseWorkingDirButton", "Click to Choose Directory")
   })
   
   ##------------------choose a folder where all export files will be stored
+
+  
+
+  # observe({
+  #   if(!is.null(dirname)){
+  #     print(dirname())
+  #   }
+  # })
   
   
-  observeEvent(input$chooseWorkingDirButton, {
-    masterWorkingDirectory<<-NULL
-    
-    shinyjs::disable("chooseWorkingDirButton")
-    
-    masterWorkingDirectory<<-choose.dir(dataFolder)
-    
-    if(is.na(masterWorkingDirectory) | is.null(masterWorkingDirectory)){
-      shinyjs::enable("chooseWorkingDirButton")
-      return()
-    }
-    
-    if(!dir.exists(masterWorkingDirectory)){
-      modalMessager('error','Please try selecting this folder again')
-      shinyjs::enable("chooseWorkingDirButton")
-      return()
-    }
-    
-    
-    
-    
-    files<-list.files(masterWorkingDirectory)
-    
-    if(length(files)>0){
-      modalMessager('error','The folder you chose is not empty.
-        This will cause errors in analysis. Please empty the folder or
-        choose a different directory and try again.')
-      shinyjs::enable("chooseWorkingDirButton")
-      masterWorkingDirectory<<-NULL
-      return()
-    }
-    
-    configOptions$masterWorkingDirectory<<-masterWorkingDirectory
-    saveConfig()
-    
-    
-    output$selectedWorkingDirectoryLabel<-renderUI({
-      strong(paste0('Your data will be exported to: ',masterWorkingDirectory))
-    })
-    
-    
-    output$selectedWorkingDirectoryLabel<-renderUI({
-      HTML(paste0('<strong>',masterWorkingDirectory,'</strong>'))
-    })
-    
-    showColumnChoiceInfo()
-    shinyjs::enable("chooseWorkingDirButton")
-  },ignoreInit=TRUE)
   
 }
 
@@ -355,22 +318,18 @@ showColumnChoiceInfo<-function(){
     
   })
   
-  
-  
-  
-  
-  observeEvent(input$uniqueIdSelectorGo, {
+  observe({
+  #observeEvent(input$uniqueIdSelectorGo, {
     # if (is.null(masterWorkingDirectory)) {
     #   modalMessager('Error', 'You need to select an empty working directory to continue')
     #   return()
     # }
-    
+    req(input$uniqueIdSelector)
+    req()
     if (!exists('importedDatasetMaster')) {
       mergeShapfilesHandler()
     } else {
       newUid <- input$uniqueIdSelector
-      print("Printing ID field selected")
-      print(input$uniqueIdSelector)
       
       species <- if (!is.null(input$customSpeciesInput)) {
         input$customSpeciesInput
@@ -462,6 +421,7 @@ downloadMovebankData <- function(user, pw, movebankId) {
    # loadingScreenToggle('show', 'downloading movebank data.. please be patient.. depending on file size, this can take a while.')
     
     processMovebankData(movebankData)
+    show("glideDiv")
     # processMovebankData(data.frame(movebankData))
   }
 }

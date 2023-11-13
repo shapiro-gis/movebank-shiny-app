@@ -22,11 +22,6 @@ modalMessager <<- function(header, body) {
     )
   }
 
-  appJumpList=list(
-    'App 1' = 'app1',
-    'App 2' = 'app2'
-  )
-
   firstOpen<<-TRUE
 
   changeToOtherApp<<-function(){
@@ -111,33 +106,6 @@ saveWorkingFile<<-function(){
  # progressIndicator('saving project files','stop')
   #loadingScreenToggle('hide','')
   saveSessionInfo()
-}
-
-saveMigtime<-function(){
-  dbConnection <<- dbConnect(RSQLite::SQLite(), paste0(masterWorkingDirectory,'//workingDb.db'))
-
-  migtimeTemp<-migtime
-  migtimeTemp$mig1start <- as.character(migtimeTemp$mig1start)
-  migtimeTemp$mig1end <- as.character(migtimeTemp$mig1end)
-  migtimeTemp$mig2start <- as.character(migtimeTemp$mig2start)
-  migtimeTemp$mig2end <- as.character(migtimeTemp$mig2end)
-  migtimeTemp$mig3start <- as.character(migtimeTemp$mig3start)
-  migtimeTemp$mig3end <- as.character(migtimeTemp$mig3end)
-  migtimeTemp$mig4start <- as.character(migtimeTemp$mig4start)
-  migtimeTemp$mig4end <- as.character(migtimeTemp$mig4end)
-  migtimeTemp$mig5start <- as.character(migtimeTemp$mig5start)
-  migtimeTemp$mig5end <- as.character(migtimeTemp$mig5end)
-  migtimeTemp$mig6start <- as.character(migtimeTemp$mig6start)
-  migtimeTemp$mig6end <- as.character(migtimeTemp$mig6end)
-  migtimeTemp$mig7start <- as.character(migtimeTemp$mig7start)
-  migtimeTemp$mig7end <- as.character(migtimeTemp$mig7end)
-  migtimeTemp$mig8start <- as.character(migtimeTemp$mig8start)
-  migtimeTemp$mig8end <- as.character(migtimeTemp$mig8end)
-
-  if(exists('migtime')){
-    dbWriteTable(dbConnection, "migtime", migtimeTemp, overwrite=T)
-  }
-  # dbGetQuery(dbConnection, "SELECT * FROM migtime")
 }
 
 loadingScreenToggle<-function(hideShow,msg){

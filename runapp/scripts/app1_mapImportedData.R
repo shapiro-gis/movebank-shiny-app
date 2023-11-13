@@ -301,7 +301,7 @@ renderMap<-function(){
 
 
   output$importedDataMapBox <- renderMapboxer({
-   mapboxer(center = c(importedDatasetMaster@data[1,'lon'],importedDatasetMaster@data[1,'lat']), style = 'mapbox://styles/mapbox/outdoors-v11' ,zoom = 6) %>% #'mapbox://styles/wmi-merkle/ckxqg5r429gpr14sd3o6dlno4'
+   mapboxer(center = c(importedDatasetMaster@data[1,'lon'],importedDatasetMaster@data[1,'lat']), style = 'mapbox://styles/wmi-merkle/ckxqg5r429gpr14sd3o6dlno4' ,zoom = 6) %>% #''
     add_navigation_control()
   })
 
@@ -981,8 +981,11 @@ pointClickEvent=function(clickedId,fromButton){
 }
 
 updatePopupTable<-function(clickedId){
+  
   rowToMap<-importedDatasetMaster@data[which(importedDatasetMaster@data$rowIds==clickedId),]
-  allFields<-names(rowToMap)
+  allFields <- c('newMasterDate','lat','lon', 'newUid', 'species', 'start_date', 'end_date', 'burst', 'fixRateHours', 'dist', 'displacementOverall', 'nsdOverall', 'speed', 'abs.angle', 'rel.angle', 'mortality', 'problem', 'comments')
+  
+  #allFields<-names(rowToMap)
   htmlToRender<-''
   mortalityPosition<-which(allFields=='mortality')
   allFields<-allFields[-mortalityPosition]

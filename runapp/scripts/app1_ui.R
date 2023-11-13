@@ -5,10 +5,79 @@ app1_init<-function(input,output,session){
   session<<-session
 
   whichAppIsRunning<<-'app1'
+  
+
+  
   observeEvent(input$changeAppsButton, {
     changeToOtherApp()
   },ignoreInit=TRUE)
+  hide("glideDiv")  # Use shinyjs to hide the div wrapping the glide
   
+  observeEvent(input$processDatesButton, {
+    hide("glideDiv")  # Use shinyjs to hide the div wrapping the glide
+  })
+ 
+  observeEvent(input$nextButton,{
+    print("Next Button Clicked")
+  })
+  
+  
+  ### Get working directory path ###
+  
+  volumes <- getVolumes()()
+  shinyDirChoose(input, 'chooseWorkingDirButton', roots=volumes, session=session)
+  dirname <- reactive({parseDirPath(volumes, input$chooseWorkingDirButton)})
+  
+  
+  observeEvent(dirname(), {
+    if(!is.null(dirname()) && length(dirname()) > 0){
+    masterWorkingDirectory<<-NULL
+
+    shinyjs::disable("chooseWorkingDirButton")
+
+    #masterWorkingDirectory<<-choose.dir(dataFolder)
+    masterWorkingDirectory<<-dirname()
+
+    if(is.na(masterWorkingDirectory) | is.null(masterWorkingDirectory)){
+      shinyjs::enable("chooseWorkingDirButton")
+      return()
+    }
+
+    if(!dir.exists(masterWorkingDirectory)){
+      modalMessager('error','Please try selecting this folder again')
+      shinyjs::enable("chooseWorkingDirButton")
+      return()
+    }
+
+
+    files<-list.files(masterWorkingDirectory)
+
+    if(length(files)>0){
+      modalMessager('error','The folder you chose is not empty.
+        This will cause errors in analysis. Please empty the folder or
+        choose a different directory and try again.')
+      shinyjs::enable("chooseWorkingDirButton")
+      masterWorkingDirectory<<-NULL
+      return()
+    }
+
+    configOptions$masterWorkingDirectory<<-masterWorkingDirectory
+    saveConfig()
+
+
+    output$selectedWorkingDirectoryLabel<-renderUI({
+      strong(paste0('Your data will be exported to: ',masterWorkingDirectory))
+    })
+
+
+    output$selectedWorkingDirectoryLabel<-renderUI({
+      HTML(paste0('<strong>',masterWorkingDirectory,'</strong>'))
+    })
+
+    showColumnChoiceInfo()
+    shinyjs::enable("chooseWorkingDirButton")}
+  },ignoreInit=TRUE)
+
   observeEvent(input$closeMappButton, {
     closeApp()
   },ignoreInit=TRUE)
@@ -74,16 +143,27 @@ app1_init<-function(input,output,session){
     color = transparent(.5)
   )
   
+  
+  ### Get path to previous project ###
+  
+  volumes <- getVolumes()()
+  shinyDirChoose(input, 'loadProjectButton', roots=volumes, session=session)
+  dirloadProjectname <- reactive({parseDirPath(volumes, input$loadProjectButton)})
+  
+  
+  observeEvent(dirloadProjectname(), {
+    if(!is.null(dirloadProjectname()) && length(dirloadProjectname()) > 0){
 
-  observeEvent(input$loadProjectButton,{
+ # observeEvent(input$loadProjectButton,{
       tryCatch({
-        rdsLocation <- choose.dir(caption = "select your project folder and press OK")
+        rdsLocation <- dirloadProjectname() #choose.dir(caption = "select your project folder and press OK")
         reload$show()
         appOneReload(rdsLocation)
         reload$hide()
       }, error = function(ex) {
         modalMessager('Error',paste0('Try choosing a file again'))
       })
+    }
   },ignoreInit=TRUE)
 
   
@@ -158,7 +238,8 @@ app1_init<-function(input,output,session){
                 deploy_off_date = last(end_date),
                 animal_taxon = unique(species),
                 studyname = unique(studyname),
-                sex = unique(sex))
+                sex = if("sex" %in% names(df)) unique(sex) else NA)
+                
     output_csv <- normalizePath(file.path(MovebankFolder(), paste0("movebank_reference_data.csv")))
     write.csv(grouped_df, file = output_csv, row.names = FALSE)
     shinyalert("Success!", paste0("Your reference table was written to the following location:", output_csv), type = "success")
@@ -299,8 +380,18 @@ app1_init<-function(input,output,session){
   # }
   # 
 
-  observeEvent(input$chooseDirButton, {
-  dataFolder<<-choose.dir()
+  ### Get path to shapefile folder ####
+  
+  volumes <- getVolumes()()
+  shinyDirChoose(input, 'chooseDirButton', roots=volumes, session=session)
+  dirshapefilename <- reactive({parseDirPath(volumes, input$chooseDirButton)})
+
+  
+  observeEvent(dirshapefilename(), {
+    if(!is.null(dirshapefilename()) && length(dirshapefilename()) > 0){
+      
+  #observeEvent(input$chooseDirButton, {
+  dataFolder<<- dirshapefilename()
   availableShapefiles <<- list.files(dataFolder, pattern = '.shp$')
   if (length(availableShapefiles) == 0) {
     modalMessager(
@@ -335,6 +426,7 @@ app1_init<-function(input,output,session){
   output$fileUploadExecute<-renderUI({
       actionButton('fileUploadExecute','Begin File Import')
   })
+    }
 })
 
 
@@ -348,6 +440,7 @@ observeEvent(input$fileUploadExecute, {
       return()
     }
     prepareFileImport()
+    show("glideDiv")
   })
 
 

@@ -1367,7 +1367,6 @@ app2_init<-function(input,output,session){
       })
       
         mcp_result(mcp_result_combined)
-        print(mcp_result)
         return(mcp_result)
   }
 
