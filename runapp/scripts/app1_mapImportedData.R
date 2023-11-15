@@ -979,41 +979,47 @@ pointClickEvent=function(clickedId,fromButton){
   }
 
 }
+updatePopupTable <- function(clickedId) {
+  rowToMap <- importedDatasetMaster@data[which(importedDatasetMaster@data$rowIds == clickedId), ]
+  allFields <- c('newMasterDate', 'lat', 'lon', 'newUid', 'species', 'start_date', 'end_date', 'burst', 'fixRateHours', 'dist', 'displacementOverall', 'nsdOverall', 'speed', 'abs.angle', 'rel.angle', 'mortality', 'problem', 'comments')
+  
+  htmlToRender <- ''
+  mortalityPosition <- which(allFields == 'mortality')
+  allFields <- allFields[-mortalityPosition]
+  problemPostion <- which(allFields == 'problem')
+  allFields <- allFields[-problemPostion]
+  commentPostion <- which(allFields == 'comments')
+  allFields <- allFields[-commentPostion]
+  allFields <- c(allFields, 'mortality')
+  allFields <- c(allFields, 'problem')
+  allFields <- c(allFields, 'comments')
+  
+  for (i in 1:length(allFields)) {
+    thisColumn <- allFields[i]
+    thisValue <- rowToMap[[1, thisColumn]]  # Use double brackets to access the value
 
-updatePopupTable<-function(clickedId){
-  
-  rowToMap<-importedDatasetMaster@data[which(importedDatasetMaster@data$rowIds==clickedId),]
-  allFields <- c('newMasterDate','lat','lon', 'newUid', 'species', 'start_date', 'end_date', 'burst', 'fixRateHours', 'dist', 'displacementOverall', 'nsdOverall', 'speed', 'abs.angle', 'rel.angle', 'mortality', 'problem', 'comments')
-  
-  #allFields<-names(rowToMap)
-  htmlToRender<-''
-  mortalityPosition<-which(allFields=='mortality')
-  allFields<-allFields[-mortalityPosition]
-  problemPostion<-which(allFields=='problem')
-  allFields<-allFields[-problemPostion]
-  commentPostion<-which(allFields=='comments')
-  allFields<-allFields[-commentPostion]
-  allFields<-c(allFields,'mortality')
-  allFields<-c(allFields,'problem')
-  allFields<-c(allFields,'comments')
-  for(i in 1:length(allFields)){
-    thisColumn<-allFields[i]
-    thisValue<-rowToMap[1,thisColumn]
-    if(is.numeric(thisValue)){
-      thisValue<-round(thisValue,1)
+    if (!is.null(thisValue)) {
+      if (is.numeric(thisValue)) {
+        thisValue <- round(thisValue, 1)
+      }
+      thisValue <- as.character(thisValue)
+      if (is.na(thisValue)) {
+        thisValue <- ' - '
+      }
+      if (nchar(thisValue) == 0) {
+        thisValue <- ' - '
+      }
+    } else {
+      thisValue <- ' - '  # Handle NULL values as needed
     }
-    thisValue<-as.character(thisValue)
-    if(is.na(thisValue)){
-      thisValue=' -  '
-    }
-    if(nchar(thisValue)==0){
-      thisValue='  -  '
-    }
-    thisHtml<-paste0('<div style="display:inline-block !important; padding:10px; text-align:center !important;"><span style="font-weight:bold !important; font-size:14px !important;">',thisColumn,'</span><br><span style="">',thisValue,'</span></div>')
-    htmlToRender<-paste0(htmlToRender,thisHtml)
+    
+    thisHtml <- paste0('<div style="display:inline-block !important; padding:10px; text-align:center !important;"><span style="font-weight:bold !important; font-size:14px !important;">', thisColumn, '</span><br><span style="">', thisValue, '</span></div>')
+    htmlToRender <- paste0(htmlToRender, thisHtml)
   }
-
+  
+  
   output$pointClickData <- renderUI({
     HTML(htmlToRender)
   })
 }
+
