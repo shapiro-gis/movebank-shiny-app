@@ -15,7 +15,8 @@ mergeShapfilesHandler<-function(){
     
     
     studyname <-  input$studynameSelector
-
+  
+    
     #Add species field
     # if (input$speciesSelector == "NaN") {
     #   for(i in 1:length(importedShapefilesHolder)){
@@ -94,7 +95,7 @@ mergeShapfilesHandler<-function(){
         }
         thisNewUid <- input$customSpeciesInput
         thisNewUid <- gsub("_", "-", thisNewUid)
-        importedShapefilesHolder[[i]]@data$SPECIES <- thisNewUid
+        importedShapefilesHolder[[i]]@data$species <- thisNewUid
       }
     }
     else {
