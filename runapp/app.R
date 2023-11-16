@@ -55,7 +55,7 @@ source("scripts/mort.check.R",local=TRUE)
 
 
 # Dependencies to be loaded for certain functions
-dependencies<-c("shiny","sf","mapdeck", "circular","shinyjs","shinyBS","sp","ggplot2","mapboxer","rgdal","adehabitatHR",'RSQLite','move','shinycssloaders','raster','terra','R.utils','waiter', 'shinythemes','shinyWidgets')
+dependencies<-c("shiny","sf","mapdeck", "circular","shinyjs","shinyBS","sp","ggplot2","mapboxer","rgdal","adehabitatHR",'RSQLite','move','shinycssloaders','raster','terra','R.utils','waiter', 'shinythemes','shinyWidgets','shinyFiles','shinyglide')
 loadDependencies(dependencies)
 
 # Unload the 'lubridate' package if loaded (known to cause issues in app2)
