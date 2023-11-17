@@ -183,9 +183,6 @@ ui <-
                    strong('Movebank ID'),
                    textInput('movebankStudyInput', '', value = "", width = NULL, placeholder = NULL),
                    actionButton("downloadMovebankDataButton", "Download Data"),
-                   hidden(
-                     fluidRow( id="downloadSpinner",withSpinner(plotOutput("downloadSpinnerDummy")))
-                   ),
                    tags$head(tags$style("#moreDataModal .modal-footer{ display:none}"))
            ),
            bsModal("configModal", "Configuration Options", NULL, size = "medium",

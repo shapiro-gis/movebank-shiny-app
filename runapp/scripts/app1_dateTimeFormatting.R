@@ -40,12 +40,16 @@ processDates<-function(){
   if(!exists('dateColumns')){
     modalMessager('ERROR','You need to select the column(s) which contain your dates')
     dtvRunning<<-FALSE;
+    show("glideDiv")
+    loadingScreenToggle('hide', 'processing dates')
     return()
   }
 
   if(length(dateColumns)==0){
     modalMessager('ERROR','You need to select the column(s) which contain your dates')
     dtvRunning<<-FALSE;
+    show("glideDiv")
+    loadingScreenToggle('hide', 'processing dates')
     return()
   }
 
@@ -54,6 +58,8 @@ processDates<-function(){
   if(is.null(dateColumns)){
     modalMessager('ERROR','You need to select the column(s) which contain your dates')
     dtvRunning<<-FALSE;
+    show("glideDiv")
+    loadingScreenToggle('hide', 'processing dates')
     return()
   }
 
@@ -165,6 +171,8 @@ processDates<-function(){
     if(length(columnFieldList)==0){
       modalMessager('ERROR','You have not selected value for your date time fields. Please try again.')
       dtvRunning<<-FALSE
+      show("glideDiv")
+      loadingScreenToggle('hide', 'processing dates')
       return()
     }
     validatorObject<<-list()
@@ -277,19 +285,27 @@ processDates<-function(){
       # other only have H,M
       naList<-do.call(rbind, lapply(tempDateDataObjSplt, function(x) is.na(x[tempIndexOfLoc])))
 
-      if(any(naList)){
-        firstErrorRow<-which(naList)[1]
-        firstErrorRowData<-importedDatasetMaster@data[firstErrorRow,tempDtCol]
-        errorMsg<-paste0('You have date time elements in your data that have a
-        different number of elements than you indicated. For example, row
-        ',firstErrorRow,' column ',tempDtCol,' = ',firstErrorRowData)
-        modalMessager('ERROR',errorMsg)
-        dtvRunning<<-FALSE
-       # progressIndicator('Done importing dates','stop')
-        loadingScreenToggle('hide','processing dates')
-        # break
+      if (any(naList)) {
+        firstErrorRow <- which(naList)[1]
+        firstErrorRowData <- importedDatasetMaster@data[firstErrorRow, tempDtCol]
+        errorMsg <- paste0(
+          'You have date time elements in your data that have a',
+          ' different number of elements than you indicated. For example, row',
+          firstErrorRow, ' column ', tempDtCol, ' = ', firstErrorRowData
+        )
+        
+        shinyalert::shinyalert(
+          title = "ERROR",
+          text = errorMsg,
+          type = "error"
+        )
+        
+        dtvRunning <<- FALSE
+        show("glideDiv")
+        loadingScreenToggle('hide', 'processing dates')
         return()
       }
+      
 
       # assign back to the temp holder just the correct index
       # of that date time element
@@ -299,13 +315,18 @@ processDates<-function(){
         if(!exists('year')){
           modalMessager('ERROR','no year')
           dtvRunning<<-FALSE
+          show("glideDiv")
+          loadingScreenToggle('hide', 'processing dates')
           #loadingScreenToggle('hide','processing dates')
           #progressIndicator('Done importing dates','stop')
           return()
         }
+        
         if(!exists('month')){
           modalMessager('ERROR','no month')
           dtvRunning<<-FALSE
+          show("glideDiv")
+          loadingScreenToggle('hide', 'processing dates')
          # loadingScreenToggle('hide','processing dates')
          # progressIndicator('Done importing dates','stop')
           return()
@@ -313,6 +334,8 @@ processDates<-function(){
         if(!exists('day')){
           modalMessager('ERROR','no day')
           dtvRunning<<-FALSE
+          show("glideDiv")
+          loadingScreenToggle('hide', 'processing dates')
          # loadingScreenToggle('hide','processing dates')
          # progressIndicator('Done importing dates','stop')
           return()
@@ -321,6 +344,8 @@ processDates<-function(){
           hour<-"00"
 
           modalMessager('ERROR','no hour')
+          show("glideDiv")
+          loadingScreenToggle('hide', 'processing dates')
           #dtvRunning<<-FALSE
           #loadingScreenToggle('hide','processing dates')
           #progressIndicator('Done importing dates','stop')
@@ -346,6 +371,7 @@ processDates<-function(){
             You need to remove decimals from the data and start over. Decimals were
             found in column ',from,'.')
             modalMessager('ERROR',message)
+            show("glideDiv")
             dtvRunning<<-FALSE
            # progressIndicator('Done importing dates','stop')
             return(FALSE)
@@ -424,10 +450,14 @@ processDates<-function(){
       )},
       error = function(cond) {
         modalMessager('ERROR',cond)
+        show("glideDiv")
+        loadingScreenToggle('hide', 'processing dates')
         return()
       },
       warning = function(cond) {
         modalMessager('Warning',cond)
+        show("glideDiv")
+        loadingScreenToggle('hide', 'processing dates')
         return()
       }
     )
@@ -456,13 +486,29 @@ processDates<-function(){
     naDatesLength<<-nrow(importedDatasetMaster@data[is.na(as.Date(importedDatasetMaster@data$newMasterDate)),])
     configOptions$naDates<<-NULL
     configOptions$naDatesLength<<-naDatesLength
-    if(naDatesLength==nrow(importedDatasetMaster@data)){
-      modalMessager('ERROR','Your selection of date elements failed.
-      Check your selection of date/time elements and try again')
-      dtvRunning<<-FALSE
-      #progressIndicator('Done importing dates','stop')
+    # if(naDatesLength==nrow(importedDatasetMaster@data)){
+    #   modalMessager('ERROR','Your selection of date elements failed.
+    #   Check your selection of date/time elements and try again')
+    #   dtvRunning<<-FALSE
+    #   #progressIndicator('Done importing dates','stop')
+    #   return()
+    # }
+    
+    if (naDatesLength == nrow(importedDatasetMaster@data)) {
+      errorMsg <- "Your selection of date elements failed. Check your selection of date/time elements and try again"
+      
+      shinyalert::shinyalert(
+        title = "ERROR",
+        text = errorMsg,
+        type = "error"
+      )
+      
+      dtvRunning <<- FALSE
+      show("glideDiv")
+      loadingScreenToggle('hide', 'processing dates')
       return()
     }
+    
     ### if NA dates are produced
     # importedDatasetMaster$naDates<<-0
     if(naDatesLength>0){

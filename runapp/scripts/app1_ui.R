@@ -13,9 +13,9 @@ app1_init<-function(input,output,session){
   },ignoreInit=TRUE)
   hide("glideDiv")  # Use shinyjs to hide the div wrapping the glide
   
-  observeEvent(input$processDatesButton, {
-    hide("glideDiv")  # Use shinyjs to hide the div wrapping the glide
-  })
+  # observeEvent(input$processDatesButton, {
+  #   hide("glideDiv")  # Use shinyjs to hide the div wrapping the glide
+  # })
  
   observeEvent(input$nextButton,{
     print("Next Button Clicked")
@@ -260,7 +260,9 @@ app1_init<-function(input,output,session){
     
     w$show()
     df <- data.frame(importedDatasetMaster)
-
+    # df <- subset(df, select = c("newUid", "studyname","species", "lon", "lat","comments","start_date","end_date",
+    #                                           "newMasterDate","problem","mortality","fixRateHours"))
+    
     output_csv <- normalizePath(file.path(MovebankFolder(), paste0( "movebank_gps_data.csv")))
     write.csv(df, file = output_csv, row.names = FALSE)
     shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_csv), type = "success")
@@ -447,8 +449,12 @@ observeEvent(input$fileUploadExecute, {
   dtvRunning<<-FALSE;
   observeEvent(input$processDatesButton,{
           if(!dtvRunning){
+            hide("glideDiv")
             dateTimeValidator()
           }
+    else{
+      show("glideDiv")
+    }
       })
   set_token("pk.eyJ1IjoianNoYXBpcm8xIiwiYSI6ImNrdDA1OGR5MzAxeHIyb290am05MzF1c2IifQ.wuOxNF5KFK0pjUJ3O80OmA") #this is jessie's token
   

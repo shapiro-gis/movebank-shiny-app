@@ -89,9 +89,11 @@ importSuccessHandler<-function(fileToImport,lastOne,i,mergingFiles){
   # change columns names to lowercase!!
   # names(importedShapefilesHolder[[fileToImport]]@data)<<-tolower(names(importedShapefilesHolder[[fileToImport]]@data))
   # change columns names to UPPERCASE!!
+  
   names(importedShapefilesHolder[[fileToImport]]@data)<<-toupper(names(importedShapefilesHolder[[fileToImport]]@data))
   colsToCheck<-c("LAT","LON","newUid","elev","comments","rowIds","newMasterDate","burst","month","day","year","jul","id_yr","x","y","nsdYear","displacementYear","nsdOverall","displacementOverall","dist","dt","speed","abs.angle","rel.angle","fixRateHours","problem","mortality")
   colsToCheck<-toupper(colsToCheck)
+
   
   for(i in 1:length(colsToCheck)){
     thisCol<-colsToCheck[i]
@@ -141,7 +143,6 @@ checkColumnsPrjs<-function(){
       return()
     }
   }
-  
   
   # check that projections are the same between datasets
   for(i in 1:length(importedShapefilesHolder)){
@@ -230,6 +231,18 @@ showColumnChoiceInfo<-function(){
   updateSelectInput(session, "studynameSelector", choices = c("",'NaN',columnNames))
   updateSelectInput(session, "speciesSelector", choices = c("",'NaN',columnNames))
   updateSelectInput(session, "uniqueIdSelector", choices = c("",'NaN',columnNames))
+  
+  
+  if ("study_name" %in% columnNames) {
+    updateSelectInput(session, "studynameSelector", choices = c("", 'NaN', columnNames), selected = "study_name")
+  } 
+  if ("taxon_canonical_name" %in% columnNames) {
+    updateSelectInput(session, "speciesSelector", choices = c("", 'NaN', columnNames), selected = "taxon_canonical_name")
+  } 
+  
+  if ("individual_id" %in% columnNames) {
+    updateSelectInput(session, "uniqueIdSelector", choices = c("", 'NaN', columnNames), selected = "individual_id")
+  }
   
   # output$uniqueIdSelectorGo<-renderUI({
   # })
@@ -428,10 +441,11 @@ downloadMovebankData <- function(user, pw, movebankId) {
 
 
 processMovebankData<-function(movebankData){
-  
+  study_name <- attr(movebankData, "study")
+  print(study_name)
   
   theseDataNames<-names(movebankData)
-  print(theseDataNames)
+
   if('location_long'%in%theseDataNames){
     thisLongField<-'location_long'
   }
@@ -446,8 +460,9 @@ processMovebankData<-function(movebankData){
   }
   
   movebankData <- as.data.frame(movebankData)
+  movebankData$study_name <- study_name
+
   
-  library(dplyr)
   
   if ('location_long' %in% theseDataNames) {
     thisLongField <- 'location_long'
