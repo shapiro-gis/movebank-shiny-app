@@ -410,19 +410,12 @@ drawInit<-function(){
 
   '
 )
-  startDate <- reactive({
-    startDate <- input$beginDate
-    return(startDate)
-  })
-  
-  endDate <- reactive({
-    endDate <- input$endDate
-    return(endDate)
-  })
+
   
   observeEvent(input$beginDate, {
+    # Ensure that individualsSelector is not null
     req(!is.null(input$individualsSelector))
-
+    
     selectedAnimal <- input$individualsSelector
     
     # Retrieve the startDate value from the reactive function
@@ -430,9 +423,13 @@ drawInit<-function(){
     start_posixct <- as.POSIXct(paste0(start, " 00:00:00"))
     
     importedDatasetMaster$start_date[importedDatasetMaster$newUid == selectedAnimal] <<- start_posixct
-    saveWorkingFile();
-    
+    saveWorkingFile()
+    updateProblemAndMortPoints()
+    mapboxer_proxy("importedDataMapBox") %>%
+      set_data(pointsForMap@data, lat = "lat", lng = 'lon', 'pointsSource') %>%
+      update_mapboxer()
   })
+  
   
   observeEvent(input$endDate, {
     req(!is.null(input$individualsSelector))
@@ -442,6 +439,7 @@ drawInit<-function(){
     end <- endDate()
     end_posixct <- as.POSIXct(paste0(end, " 00:00:00"))
     importedDatasetMaster$end_date[importedDatasetMaster$newUid == selectedAnimal] <<- end_posixct
+    updateProblemAndMortPoints()
     
     saveWorkingFile();
     
@@ -633,7 +631,7 @@ addPointsToMap<-function(){
         add_source(as_mapbox_source(pointsForMap@data,lat="lat",lng="lon"),'pointsSource')%>%
         add_circle_layer(
           source = 'pointsSource',
-          circle_color = '#000cff',
+          circle_color = 'grey',
           circle_radius = 5,
           id='pointLayer'
         )%>%
@@ -649,7 +647,17 @@ addPointsToMap<-function(){
           id='mortalityLayer'
         )%>%
         update_mapboxer()
-
+      
+      mapboxer_proxy("importedDataMapBox") %>%
+        add_source(as_mapbox_source(dummyPoint,lat="lat",lng="lon"),'activePoints')%>%
+        add_circle_layer(
+          source = 'activePoints',
+          circle_color = "#000cff",
+          circle_radius = 4.5,
+          id='activeLayer'
+        )%>%
+        update_mapboxer()
+      
 
         mapboxer_proxy("importedDataMapBox") %>%
           add_source(as_mapbox_source(dummyPoint,lat="lat",lng="lon"),'problemsSource')%>%
@@ -751,6 +759,15 @@ addPointsToMap<-function(){
 
 }
 
+startDate <- reactive({
+  startDate <- input$beginDate
+  return(startDate)
+})
+
+endDate <- reactive({
+  endDate <- input$endDate
+  return(endDate)
+})
 
 updateProblemAndMortPoints<-function(){
   if(any(pointsForMap@data$problem==1)){
@@ -773,6 +790,18 @@ updateProblemAndMortPoints<-function(){
       set_data(dummyPoint,lat="lat",lng='lon','mortalitiesSource')%>%
       update_mapboxer()
   }
+  
+  if(any(pointsForMap@data$newMasterDate >= startDate() & pointsForMap@data$newMasterDate <= endDate())){
+    activeToMap<-pointsForMap@data[which(pointsForMap@data$newMasterDate >= startDate()  & pointsForMap@data$newMasterDate <= endDate()),]
+    mapboxer_proxy("importedDataMapBox") %>%
+      set_data(activeToMap,lat="lat",lng='lon','activePoints')%>%
+      update_mapboxer()
+  }else{
+    mapboxer_proxy("importedDataMapBox") %>%
+      set_data(dummyPoint,lat="lat",lng='lon','activePoints')%>%
+      update_mapboxer()
+  }
+  
   #shapefile_export <- st_write(importedDatasetMaster@data, paste0( "/",input$movebankStudyInput.shp), driver = "ESRI Shapefile")
 }
 
@@ -1016,8 +1045,7 @@ updatePopupTable <- function(clickedId) {
     thisHtml <- paste0('<div style="display:inline-block !important; padding:10px; text-align:center !important;"><span style="font-weight:bold !important; font-size:14px !important;">', thisColumn, '</span><br><span style="">', thisValue, '</span></div>')
     htmlToRender <- paste0(htmlToRender, thisHtml)
   }
-  
-  
+
   output$pointClickData <- renderUI({
     HTML(htmlToRender)
   })

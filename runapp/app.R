@@ -279,41 +279,51 @@ ui <-
                     )
            ),
            
-           # Styling for glide screens
+          tags$style(HTML("
+          /* Reduce margin-bottom for selectedWorkingDirectoryLabel */
+          #selectedWorkingDirectoryLabel {
+            margin-bottom:5px; /* Adjust the value as needed */
+          }
+        
+          /* Other CSS styles remain unchanged */
+          #glideDiv {
+            width: 1200px;
+            height: 550px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1050;
+            overflow: auto;
+            box-shadow: 0 5px 15px rgba(0,0,0,.5);
+            border-radius: 10px;
+          }
+        ")),
           
-           tags$style(HTML("
-                    #glideDiv {
-                      width: 1200px;
-                      height: 650px;
-                      position: fixed;
-                      top: 50%;
-                      left: 50%;
-                      transform: translate(-50%, -50%);
-                      z-index: 1050;  /* To ensure it appears on top of other content */
-                      overflow: auto;
-                      box-shadow: 0 5px 15px rgba(0,0,0,.5);  /* Optional shadow for modal-like appearance */
-                      border-radius: 10px;  /* Optional rounded corners */
-                    }
-                  ")),
           
           
           # Define a div with glide screens for various steps in the data cleaning process
           
            div(id = "glideDiv", class = "d-flex align-items-center justify-content-center",
                glide(id = "glideDiv",
-             screen(
-               #id='folderSelectSection',
-               class="padded-screen",
-               h3(strong("Step 1: Choose Working Directory")),
-               column(6,
-                      column(12,
-                             uiOutput("workingDirectoryTitle"),
-                             br(),
-                             uiOutput("chooseWorkingDirButton"),
-                             uiOutput("selectedWorkingDirectoryLabel")
-                      )
-               )
-             ),
+                     tags$style(HTML("
+                          /* Reduce margin-bottom for elements with the 'my-control' class */
+                          .my-control {
+                            margin-bottom: 10px; /* Adjust the value as needed */
+                          }
+                        ")),
+                 
+                     screen(
+                       class = "padded-screen",
+                       h3(strong("Step 1: Choose Working Directory")),
+                       div(
+                       style = "max-height: 200px; overflow-y: auto;",  # Set the max-height and enable vertical scrolling if necessary
+                                     div(class = "my-control", uiOutput("workingDirectoryTitle")),
+                                     div(class = "my-control", uiOutput("chooseWorkingDirButton")),
+                                     div(class = "my-control", uiOutput("selectedWorkingDirectoryLabel"))
+                              
+                       )
+                     ),
              screen(
               # id="uidSeletorRow", 
                class="padded-screen",
@@ -512,6 +522,21 @@ hidden(
           # Displaying the Mapbox interface
           mapboxerOutput('importedDataMapBox', width = "100%", height = "105vh"),
           
+          #Legend
+          absolutePanel(
+            id = "legend", class = "panel panel-default", fixed = TRUE,
+            left = 10, bottom = 20,
+            width = "5%", height = "auto",
+            style = "padding: 10px 10px 10px 10px;",
+            div(
+              style = "text-align: center;",
+              fluidRow(HTML('<i class="fa-solid fa-circle" style="color: #dfff00;"></i>'),"Mortality"),
+              fluidRow(HTML('<i class="fa-solid fa-circle" style="color: #dd00ff;"></i>'),"Problem"),
+              fluidRow(HTML('<i class="fa-solid fa-circle" style="color: #000cff;"></i>'),"Active"),
+              fluidRow(HTML('<i class="fa-solid fa-circle" style="color: #737373;"></i>'),"Masked"),
+              
+            )
+            ),
           
           # Panel with action buttons and other controls
           absolutePanel(
