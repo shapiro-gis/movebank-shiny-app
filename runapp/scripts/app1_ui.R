@@ -189,7 +189,7 @@ app1_init<-function(input,output,session){
   observeEvent(input$confirmExport,{
     w$show()
     layername = input$fileName
-    output_shapefile <- normalizePath(file.path(exportQuery(), paste0(layername, ".shp")))
+    output_shapefile <- normalizePath(file.path(masterWorkingDirectory, paste0(layername, ".shp")))
     print(output_shapefile)
     print(names(importedDatasetMaster))
     writeOGR(importedDatasetMaster, dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
@@ -240,7 +240,7 @@ app1_init<-function(input,output,session){
                 studyname = unique(studyname),
                 sex = if("sex" %in% names(df)) unique(sex) else NA)
                 
-    output_csv <- normalizePath(file.path(MovebankFolder(), paste0("movebank_reference_data.csv")))
+    output_csv <- normalizePath(file.path(masterWorkingDirectory, paste0("movebank_reference_data.csv")))
     write.csv(grouped_df, file = output_csv, row.names = FALSE)
     shinyalert("Success!", paste0("Your reference table was written to the following location:", output_csv), type = "success")
     
@@ -263,7 +263,7 @@ app1_init<-function(input,output,session){
     # df <- subset(df, select = c("newUid", "studyname","species", "lon", "lat","comments","start_date","end_date",
     #                                           "newMasterDate","problem","mortality","fixRateHours"))
     
-    output_csv <- normalizePath(file.path(MovebankFolder(), paste0( "movebank_gps_data.csv")))
+    output_csv <- normalizePath(file.path(masterWorkingDirectory, paste0( "movebank_gps_data.csv")))
     write.csv(df, file = output_csv, row.names = FALSE)
     shinyalert("Success!", paste0("Your shapefile was written to the following location:", output_csv), type = "success")
     
@@ -294,7 +294,7 @@ app1_init<-function(input,output,session){
     
     layername = unique(importedDatasetMaster$studyname)
     
-    output_shapefile <- normalizePath(file.path(MovebankFolder(), paste0(layername, ".shp")))
+    output_shapefile <- normalizePath(file.path(masterWorkingDirectory, paste0(layername, ".shp")))
     #writeOGR(importedDatasetMaster, dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
     
     output_rds <- normalizePath(file.path(MovebankFolder(), paste0(layername, ".rds")))

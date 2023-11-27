@@ -476,7 +476,7 @@ hidden(
     
     # Modal that appears when a point on the map is clicked
     
-    bsModal("pointClickModal", "PointData", NULL, size = "large",
+    bsModal("pointClickModal", "PointData", NULL, size = "large", 
           column(5,
             actionButton("previousPointButton", "← previous point"),
           ),
@@ -491,8 +491,11 @@ hidden(
           column(6,
           selectInput('isProblemSelector', 'Is this point classified as a problem point?',c('yes','no')),
           ),
-          column(12,
+          column(6,
           textInput('commentInput', 'Comments for this point'),
+          ),
+          column(6,
+                 textInput('animalID', 'Change Animal ID'),
           ),
           uiOutput("pointClickData")
     ),
@@ -508,8 +511,11 @@ hidden(
           column(6,
             selectInput('manyPointsIsProblemSelector', 'Reclassify all these points as problem points?',c('','yes','no'),selected=''),
           ),
-          column(12,
+          column(6,
             textInput('manyPointsCommentInput', 'Comments for this group of points'),
+          ),
+          column(6,
+                 textInput('manyAnimalID', 'New animal ID this group of points'),
           )
     ),
 # uiOutput('polygonHolder'),

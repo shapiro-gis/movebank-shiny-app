@@ -102,8 +102,23 @@ mapInit<-function(){
 
 
   },ignoreInit=TRUE)
-
-
+  
+  observeEvent(input$animalID, {
+    pointToChange<-clickedMapPoint$props$rowIds
+    importedDatasetMaster@data[which(importedDatasetMaster@data$rowIds==clickedId),'newUid']<<-input$animalID
+    updateTable('importedDatasetMaster','newUid',paste0('where rowIds = ',clickedId),paste0('"',input$animalID,'"'))
+    updatePopupTable(clickedId)
+    pointsForMap@data[which(pointsForMap@data$rowIds==clickedId),'newUid']<<-input$animalID
+    #updateSelectInput(session, 'individualsSelector', selected= unique(importedDatasetMaster@data$newUid))
+    mapboxer_proxy("importedDataMapBox") %>%
+      set_data(pointsForMap@data,lat="lat",lng='lon','pointsSource')%>%
+      update_mapboxer()
+    #saveShapefile()
+    updateAnimalYears()
+    
+  },ignoreInit=TRUE)
+  
+  
 
   observeEvent(input$forwardHandlerButton, {
     allAnimals<-unique(importedDatasetMaster@data$newUid)
@@ -225,8 +240,7 @@ getAnimalYearAverages <- function() {
 
   updateDateInput(session, 'beginDate', label = NULL, value = uniqueMinDate())
   updateDateInput(session, 'endDate', label = NULL, value = uniqueMaxDate())
-  
-#  updateDateInput(session,'beginDate',label = NULL, value = min(importedDatasetMaster$dateTest))
+
   
   observeEvent(input$individualsSelector, {
     selectedAnimal <<- input$individualsSelector
@@ -234,7 +248,63 @@ getAnimalYearAverages <- function() {
     updateSelectInput(session, 'yearSelector', label = NULL, choices = c('All Years', animalYears()), selected = selectedYear)
     updateDateInput(session, 'beginDate', label = NULL, value = uniqueMinDate())
     updateDateInput(session, 'endDate', label = NULL, value = uniqueMaxDate())
+    addPointsToMap()
+  }, ignoreInit = TRUE)
+  
+  observeEvent(input$yearSelector, {
+    selectedYear <<- input$yearSelector
+    addPointsToMap()
+  }, ignoreInit = TRUE)
+}
+
+
+updateAnimalYears <- function() {
+  allAnimals <- unique(importedDatasetMaster@data$newUid)
+  selectedAnimal <<- input$individualsSelector
+  updateSelectInput(session, 'individualsSelector', label = NULL, choices = allAnimals, selected = selectedAnimal)
+  animalYears <- reactive({
+    req(!is.null(importedDatasetMaster))
+    req(!is.null(input$individualsSelector))
     
+    selectedAnimal <- input$individualsSelector
+    filteredData <- importedDatasetMaster@data[importedDatasetMaster@data$newUid == selectedAnimal, ]
+    uniqueYears <- unique(filteredData$year)
+    return(uniqueYears)
+  })
+  
+  selectedYear <<- NULL  # Initialize selectedYear with a default value
+  
+  updateSelectInput(session, 'yearSelector', label = NULL, choices = c('All Years', animalYears()), selected = selectedYear)
+  
+  uniqueMinDate <- reactive({
+    req(!is.null(importedDatasetMaster))
+    req(!is.null(input$individualsSelector))
+    
+    filteredData <- importedDatasetMaster@data[importedDatasetMaster@data$newUid == selectedAnimal, ]
+    uniqueMinDate <- unique(filteredData$start_date)
+    return(uniqueMinDate)
+  })
+  
+  uniqueMaxDate <- reactive({
+    req(!is.null(importedDatasetMaster))
+    req(!is.null(input$individualsSelector))
+    
+    filteredData <- importedDatasetMaster@data[importedDatasetMaster@data$newUid == selectedAnimal, ]
+    uniqueMaxDate <- unique(filteredData$end_date)
+    return(uniqueMaxDate)
+  })
+  
+
+  updateDateInput(session, 'beginDate', label = NULL, value = uniqueMinDate())
+  updateDateInput(session, 'endDate', label = NULL, value = uniqueMaxDate())
+
+  
+  observeEvent(input$individualsSelector, {
+    selectedAnimal <<- input$individualsSelector
+    selectedYear <<- animalYears()[1]   # Update selectedYear based on animalYears
+    updateSelectInput(session, 'yearSelector', label = NULL, choices = c('All Years', animalYears()), selected = selectedYear)
+    updateDateInput(session, 'beginDate', label = NULL, value = uniqueMinDate())
+    updateDateInput(session, 'endDate', label = NULL, value = uniqueMaxDate())
     addPointsToMap()
   }, ignoreInit = TRUE)
   
@@ -410,6 +480,7 @@ drawInit<-function(){
 
   '
 )
+  
 
   
   observeEvent(input$beginDate, {
@@ -494,6 +565,30 @@ observeEvent(input$manyPointsCommentInput, {
   updateTable('importedDatasetMaster','comments',paste0('where rowIds IN (',toString(pointIdsInDrawBox),') '),paste0('"',thisValue,'"'))
 },ignoreInit=TRUE)
 
+observeEvent(input$manyAnimalID, {
+  thisValue <- input$manyAnimalID
+  
+  # Check if thisValue already exists in newUid
+  if (thisValue %in% importedDatasetMaster@data$newUid) {
+    # Display a warning message using shinyalert
+    shinyalert::shinyalert(
+      title = "Warning",
+      text = "The animal ID entered already exists. This action can not be undone. Please confirm your animal ID values.",
+      type = "warning"
+    )
+  } 
+    # If it doesn't exist, proceed with the updates
+    whichRows <- which(importedDatasetMaster@data$rowIds %in% pointIdsInDrawBox)
+    importedDatasetMaster@data[whichRows, 'newUid'] <<- thisValue
+    pointsForMap@data[pointsInDrawBox, 'newUid'] <<- thisValue
+    updateTable('importedDatasetMaster', 'newUid', paste0('where rowIds IN (', toString(pointIdsInDrawBox), ') '), paste0('"', thisValue, '"'))
+    #getAnimalYearAverages()
+    updateAnimalYears()
+  
+}, ignoreInit = TRUE)
+
+
+
 observeEvent(input$polygonHolder, {
   drawnData<<-input$polygonHolder
 
@@ -549,6 +644,7 @@ observeEvent(input$polygonHolder, {
     updateSelectInput(session, 'manyPointsIsMortalitySelector', selected='')
     updateSelectInput(session, 'manyPointsIsProblemSelector', selected='')
     updateTextInput(session, 'manyPointsCommentInput', value='no comments added')
+
     toggleModal(session,'manyPointsSelectedModal',toggle='open')
 })
 
@@ -769,6 +865,9 @@ endDate <- reactive({
   return(endDate)
 })
 
+
+
+
 updateProblemAndMortPoints<-function(){
   if(any(pointsForMap@data$problem==1)){
     problemsToMap<-pointsForMap@data[which(pointsForMap@data$problem==1),]
@@ -978,7 +1077,7 @@ pointClickEvent=function(clickedId,fromButton){
     fit_bounds(c(c(thisLon-0.01, thisLat-0.01),c(thisLon+0.01, thisLat+0.01)))%>%
     update_mapboxer()
 
-
+  updateSelectInput(session, 'animalID', selected= rowToMap$newUid)
 
   if(rowToMap$mortality==1){
     updateSelectInput(session, 'isMortalitySelector', selected='yes')
@@ -1008,6 +1107,8 @@ pointClickEvent=function(clickedId,fromButton){
   }
 
 }
+
+
 updatePopupTable <- function(clickedId) {
   rowToMap <- importedDatasetMaster@data[which(importedDatasetMaster@data$rowIds == clickedId), ]
   allFields <- c('newMasterDate', 'lat', 'lon', 'newUid', 'species', 'start_date', 'end_date', 'burst', 'fixRateHours', 'dist', 'displacementOverall', 'nsdOverall', 'speed', 'abs.angle', 'rel.angle', 'mortality', 'problem', 'comments')

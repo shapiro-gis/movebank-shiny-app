@@ -209,14 +209,21 @@ showColumnChoiceInfo<-function(){
     rowsToShow<-importedShapefilesHolder[[1]][1:20,]
   }else{
     columnNames<-names(importedDatasetMaster@data)
+    
     importedDatasetMaster@data['comments']<<-''
     
     rowsToShow<-importedDatasetMaster[1:20,]
+
   }
+  # Assuming your dataframe is named df
   
   if('timestamp'%in%names(rowsToShow)){
-    rowsToShow$timestamp<-as.character(rowsToShow$timestamp)
+    #rowsToShow$timestamp<-as.character(rowsToShow$timestamp)
+    rowsToShow$timestamp <- format(rowsToShow$timestamp, "%Y-%m-%d %H:%M:%S")
+    
+    
   }
+  
   output$aidConfigTable <- renderTable(rowsToShow)
   
   # output$uniqueIdSelector<-renderUI({
@@ -442,7 +449,6 @@ downloadMovebankData <- function(user, pw, movebankId) {
 
 processMovebankData<-function(movebankData){
   study_name <- attr(movebankData, "study")
-  print(study_name)
   
   theseDataNames<-names(movebankData)
 
