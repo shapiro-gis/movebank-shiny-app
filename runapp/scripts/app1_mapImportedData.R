@@ -566,6 +566,11 @@ observeEvent(input$manyPointsCommentInput, {
 },ignoreInit=TRUE)
 
 observeEvent(input$manyAnimalID, {
+  
+  if(input$manyAnimalID==''){
+    return()
+  }
+  
   thisValue <- input$manyAnimalID
   
   # Check if thisValue already exists in newUid
@@ -573,7 +578,7 @@ observeEvent(input$manyAnimalID, {
     # Display a warning message using shinyalert
     shinyalert::shinyalert(
       title = "Warning",
-      text = "The animal ID entered already exists. This action can not be undone. Please confirm your animal ID values.",
+      text = "The animal ID entered already exists. Please confirm your animal ID as this action can not be undone.",
       type = "warning"
     )
   } 
@@ -584,7 +589,8 @@ observeEvent(input$manyAnimalID, {
     updateTable('importedDatasetMaster', 'newUid', paste0('where rowIds IN (', toString(pointIdsInDrawBox), ') '), paste0('"', thisValue, '"'))
     #getAnimalYearAverages()
     updateAnimalYears()
-  
+   # updateSelectInput(session, 'manyAnimalID', selected= "")
+    
 }, ignoreInit = TRUE)
 
 
@@ -644,6 +650,7 @@ observeEvent(input$polygonHolder, {
     updateSelectInput(session, 'manyPointsIsMortalitySelector', selected='')
     updateSelectInput(session, 'manyPointsIsProblemSelector', selected='')
     updateTextInput(session, 'manyPointsCommentInput', value='no comments added')
+    updateSelectInput(session, 'manyAnimalID', selected= '')
 
     toggleModal(session,'manyPointsSelectedModal',toggle='open')
 })

@@ -477,6 +477,11 @@ hidden(
     # Modal that appears when a point on the map is clicked
     
     bsModal("pointClickModal", "PointData", NULL, size = "large", 
+            column(12,
+                   h3(HTML('<i class="fas fa-exclamation-triangle text-warning fa-lg"></i> <strong>This action is not reversible</strong>'), style="text-align: center;"),
+                   p(HTML('You have made a selection for one point. You can classify this point as a mortality, problem, assign a new animal ID, or add comments to the point.')),
+            )
+            ,
           column(5,
             actionButton("previousPointButton", "← previous point"),
           ),
@@ -502,9 +507,11 @@ hidden(
     
     # Modal that appears when multiple points on the map are selected
     bsModal("manyPointsSelectedModal", "Points Selected", NULL, size = "large",
-          column(12,
-            p('You have made a selection of many points. You can do a batch action and classify all these points as mortalities, problems or add comments to all points. **This action is not reversable**'),
-          ),
+            column(12,
+                   h3(HTML('<i class="fas fa-exclamation-triangle text-warning fa-lg"></i> <strong>This action is not reversible</strong>'), style="text-align: center;"),
+                   p(HTML('You have made a selection of many points. You can do a batch action and classify all these points as mortalities, problems, change the animal ID or add comments to all points.')),
+
+            ),
           column(6,
             selectInput('manyPointsIsMortalitySelector', 'Reclassify all these points as mortalities?',c('','yes','no'),selected=''),
           ),
