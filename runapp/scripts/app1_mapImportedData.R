@@ -36,7 +36,8 @@ mapInit<-function(){
     )
   }
 
-
+  w$hide()
+  
   loadingScreenToggle('hide','')
 
 
@@ -115,6 +116,8 @@ mapInit<-function(){
       update_mapboxer()
     #saveShapefile()
     updateAnimalYears()
+    saveWorkingFile()
+    
     
   },ignoreInit=TRUE)
   
@@ -590,7 +593,7 @@ observeEvent(input$manyAnimalID, {
     #getAnimalYearAverages()
     updateAnimalYears()
    # updateSelectInput(session, 'manyAnimalID', selected= "")
-    
+    saveWorkingFile()
 }, ignoreInit = TRUE)
 
 

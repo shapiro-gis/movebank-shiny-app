@@ -292,8 +292,9 @@ app1_init<-function(input,output,session){
     
     importedDatasetMaster <- importedDatasetMaster[, requiredFields]
     
-    layername = unique(importedDatasetMaster$studyname)
-    
+    #Remove all slashes from the layername
+    layername <- as.character(gsub("[/\\\\]", "", unique(importedDatasetMaster$studyname)[1]))
+   
     output_shapefile <- normalizePath(file.path(masterWorkingDirectory, paste0(layername, ".shp")))
     #writeOGR(importedDatasetMaster, dsn = output_shapefile, layer = layername, driver = "ESRI Shapefile",overwrite_layer = TRUE)
     

@@ -19,20 +19,35 @@ showDateTimeSelectionPanel<-function(){
 
   ##------------------ show the first 20 rows of data
   rowsToShow<-importedDatasetMaster@data[1:20,]
+  
   if('timestamp'%in%names(rowsToShow)){
-    rowsToShow$timestamp<-as.character(rowsToShow$timestamp)
+   # rowsToShow$timestamp<-as.character(rowsToShow$timestamp)
+    rowsToShow$timestamp <- format(rowsToShow$timestamp, "%Y-%m-%d %H:%M:%S")
+    
   }
+  if('timestamp'%in%names(importedDatasetMaster@data)){
+    # rowsToShow$timestamp<-as.character(rowsToShow$timestamp)
+    importedDatasetMaster@data$timestamp <- format(importedDatasetMaster@data$timestamp, "%Y-%m-%d %H:%M:%S")
+
+  }
+  
+
+  
   output$dateConfigTable1 <- renderTable(rowsToShow)
 
   uniqueColumns<-names(importedDatasetMaster@data)
   selectedDateColumns<-NULL
-
+  
+  if ("timestamp" %in% names(importedDatasetMaster@data)) {
+    updateCheckboxGroupInput(session, "dateColumnSelector", choices=uniqueColumns, selected = "timestamp")
+  } else{
+    
   updateCheckboxGroupInput(session,
     "dateColumnSelector",
       choices=uniqueColumns,
       selected=selectedDateColumns,
       inline=TRUE
-    )
+    )}
 }
 
 processDates<-function(){
@@ -41,6 +56,8 @@ processDates<-function(){
     modalMessager('ERROR','You need to select the column(s) which contain your dates')
     dtvRunning<<-FALSE;
     show("glideDiv")
+    w$hide()
+    
     loadingScreenToggle('hide', 'processing dates')
     return()
   }
@@ -49,6 +66,8 @@ processDates<-function(){
     modalMessager('ERROR','You need to select the column(s) which contain your dates')
     dtvRunning<<-FALSE;
     show("glideDiv")
+    w$hide()
+    
     loadingScreenToggle('hide', 'processing dates')
     return()
   }
@@ -59,6 +78,8 @@ processDates<-function(){
     modalMessager('ERROR','You need to select the column(s) which contain your dates')
     dtvRunning<<-FALSE;
     show("glideDiv")
+    w$hide()
+    
     loadingScreenToggle('hide', 'processing dates')
     return()
   }
@@ -74,7 +95,9 @@ processDates<-function(){
   ##------------------ show the first 20 rows of data
   rowsToShow<-importedDatasetMaster@data[1:20,]
   if('timestamp'%in%names(rowsToShow)){
-    rowsToShow$timestamp<-as.character(rowsToShow$timestamp)
+    #rowsToShow$timestamp<-as.character(rowsToShow$timestamp)
+    rowsToShow$timestamp <- format(rowsToShow$timestamp, "%Y-%m-%d %H:%M:%S")
+    
   }
   output$dateConfigTable2 <- renderTable(rowsToShow)
   ###-- create multiselectors for each of the selected date/time columns
@@ -172,6 +195,8 @@ processDates<-function(){
       modalMessager('ERROR','You have not selected value for your date time fields. Please try again.')
       dtvRunning<<-FALSE
       show("glideDiv")
+      w$hide()
+      
       loadingScreenToggle('hide', 'processing dates')
       return()
     }
@@ -187,6 +212,7 @@ processDates<-function(){
       for(j in 1:length(tempColumnItems)){
         #this is the particular dt value in that column
         tempValue<-tempColumnItems[j]
+        print(tempValue)
         ## j ends up being the position in that column
         updateKeyObj(tempValue,j,tempColumn)
       }
@@ -217,7 +243,16 @@ processDates<-function(){
   hasObjectsHandler<-function(){
     startTime<<-Sys.time()
     #progressIndicator('Processing Dates.. Please wait','start')
-    loadingScreenToggle('show','processing dates')
+    w <- Waiter$new(
+      html = tagList(
+        spin_3(),
+        h4("Processing dates", style = "color: grey") # Add style attribute to h4 element
+      ),
+      color = transparent(.5)
+    )
+    
+    w$show()
+    #loadingScreenToggle('show','processing dates')
     importedDatasetMaster@data$newMasterDate<<--999
 
     # if there happens to be am/pm time.. lets quickly create a vector to hold these
@@ -236,19 +271,22 @@ processDates<-function(){
     #  since the loop below runs from all possible date time elements
     # errors are thrown when not all seconds, minutes etc have been selected
     # need to run this looop based in validatorObject
+
     selectedDateTimeElements<-names(validatorObject)
+
     validatorsLength<-length(selectedDateTimeElements)
+
+    combined_format <- paste(columnFieldList, collapse = " ")
+
+    importedDatasetMaster@data$timestamp <- format(importedDatasetMaster@data$timestamp, combined_format)
+
     for(j in 1:validatorsLength){
-      processingInfo<-paste0(sprintf("%.1f",round((j/(validatorsLength+1)*100),1)),'% ','complete')
-     # progressIndicator(processingInfo,'update',j/(validatorsLength+1))
       # what is the type
       tempDtType<-selectedDateTimeElements[j]
 
       # what position is it in this specific column?
       tempIndexOfLoc<-as.numeric(validatorObject[[tempDtType]][2])
-      # lookup the posix type (?necessary?)
-      # tempDtPosixType<-validatorObject[[validatorValues[[j]]]][3]
-      # which column is it in
+
       tempDtCol<-validatorObject[[tempDtType]][4]
 
       # -------------
@@ -264,18 +302,18 @@ processDates<-function(){
 
       # create a temp vector for this DT element named as such
       assign(selectedDateTimeElements[j],importedDatasetMaster@data[,tempDtCol])
-      # remove all the non numeric characters and spaces and sub
-      # with commas -- the get command grabs the above variabled named as
-      # month day year etc etc
+
+      #tempDateDataObjSplt <- unlist(strsplit(as.character(get(selectedDateTimeElements[j])), ",[^0-9]*"))
       tempDateDataObjSplt<-gsub("[^0-9.]",',',get(selectedDateTimeElements[j]))
+      
       # split on the commas
-      tempDateDataObjSplt<-strsplit(tempDateDataObjSplt,",")
+      tempDateDataObjSplt <- strsplit(tempDateDataObjSplt, ",")
+      
       # remove the empties
       tempDateDataObjSplt<-lapply(tempDateDataObjSplt,function(x){
         x[!x ==""]
       })
-
-
+    
 
 
 
@@ -284,7 +322,7 @@ processDates<-function(){
       # for example a merged dataset where some time elements have H,M,S and
       # other only have H,M
       naList<-do.call(rbind, lapply(tempDateDataObjSplt, function(x) is.na(x[tempIndexOfLoc])))
-
+      
       if (any(naList)) {
         firstErrorRow <- which(naList)[1]
         firstErrorRowData <- importedDatasetMaster@data[firstErrorRow, tempDtCol]
@@ -302,6 +340,7 @@ processDates<-function(){
         
         dtvRunning <<- FALSE
         show("glideDiv")
+        w$hide()
         loadingScreenToggle('hide', 'processing dates')
         return()
       }
@@ -316,6 +355,7 @@ processDates<-function(){
           modalMessager('ERROR','no year')
           dtvRunning<<-FALSE
           show("glideDiv")
+          w$hide()
           loadingScreenToggle('hide', 'processing dates')
           #loadingScreenToggle('hide','processing dates')
           #progressIndicator('Done importing dates','stop')
@@ -326,6 +366,8 @@ processDates<-function(){
           modalMessager('ERROR','no month')
           dtvRunning<<-FALSE
           show("glideDiv")
+          w$hide()
+          
           loadingScreenToggle('hide', 'processing dates')
          # loadingScreenToggle('hide','processing dates')
          # progressIndicator('Done importing dates','stop')
@@ -335,6 +377,8 @@ processDates<-function(){
           modalMessager('ERROR','no day')
           dtvRunning<<-FALSE
           show("glideDiv")
+          w$hide()
+          
           loadingScreenToggle('hide', 'processing dates')
          # loadingScreenToggle('hide','processing dates')
          # progressIndicator('Done importing dates','stop')
@@ -345,6 +389,8 @@ processDates<-function(){
 
           modalMessager('ERROR','no hour')
           show("glideDiv")
+          w$hide()
+          
           loadingScreenToggle('hide', 'processing dates')
           #dtvRunning<<-FALSE
           #loadingScreenToggle('hide','processing dates')
@@ -403,6 +449,7 @@ processDates<-function(){
         checkForDec(day,'day')
         checkForDec(hour,'hour')
         checkForDec(minute,'minute')
+        checkForDec(second,'second')
         
         if(testInteger(second)){
           oldSec<<-second
@@ -419,6 +466,7 @@ processDates<-function(){
           rm(ampm)
         }
         newDateTime<<-paste(newDate,newTime,sep=" ")
+        print(head(newDateTime,5))
         combineDateElements(newDateTime)
 
       }
@@ -438,9 +486,9 @@ processDates<-function(){
     if(ampmtime){
       stringFormat<-"%Y-%m-%d %I:%M:%S %p"
     }
-
-    importedDatasetMaster$dateTest<<-newDateTime
     
+    importedDatasetMaster$dateTest<<-newDateTime
+
 
     importedDatasetMaster@data$newMasterDate<<-tryCatch({
       as.POSIXct(strptime(
@@ -451,12 +499,16 @@ processDates<-function(){
       error = function(cond) {
         modalMessager('ERROR',cond)
         show("glideDiv")
+        w$hide()
+        
         loadingScreenToggle('hide', 'processing dates')
         return()
       },
       warning = function(cond) {
         modalMessager('Warning',cond)
         show("glideDiv")
+        w$hide()
+        
         loadingScreenToggle('hide', 'processing dates')
         return()
       }
@@ -505,6 +557,8 @@ processDates<-function(){
       
       dtvRunning <<- FALSE
       show("glideDiv")
+      w$hide()
+      
       loadingScreenToggle('hide', 'processing dates')
       return()
     }
