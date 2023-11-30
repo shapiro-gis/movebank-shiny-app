@@ -204,6 +204,19 @@ ui <-
           
           # Primary content for the 'Data Cleaning' tab
           
+          tags$style(HTML("
+            .box {
+                border-radius: 10px;
+                background-color:  rgba(255, 255, 255, 0.89);
+                box-shadow: 5px 5px 8px rgba(0, 0, 0, 0.5);
+                padding: 20px;
+                margin: 10px;
+                height:500px;
+                overflow: auto;
+
+            }
+        ")),
+
            fluidRow(id='importDataRow',
   
                   column(12,
@@ -211,13 +224,14 @@ ui <-
                            style = "text-align: center;",
                           # h2(strong("Data Cleaning")),
                           br(),
-                          tags$h1("Select an option to start data cleaning!"),
+                          tags$h1("Select an option below to clean GPS data"),
                           # (style = "width: 60%; margin: 0 auto;",
                           #    "Choose an option below to initiate movement data cleaning")
                           #  
                          ),
                          br(),
                          column(4,
+                                tags$div(class="box", 
              h3(strong('Upload Shapefile')),
                                 p("Choose the directory containing your dataset(s) below. If uploading multiple files, they must all be in the same directory. You can upload one ESRI shapefile with many individuals, or multiple
              shapefiles each representing a single individual. If importing unique files for each individual, it is necessary that all files have identical columns, data formats and projections. If importing a merged file, it
@@ -255,24 +269,25 @@ ui <-
                                 uiOutput("uploadedShapefile18"),
                                 uiOutput("uploadedShapefile19"),
                                 uiOutput("uploadedShapefile20"),        
-                                ),
+                                )),
                                 column(4,
-                                       
+                                       tags$div(class="box", 
                                        h3(strong('Download from Movebank')),
                                        img(src = "movebank-logo.png",height = "100px", width = "350px"),
                                        
                                        p("Download data directly from movebank using your login credentials and the Movebank project ID."),
                                        actionButton("movebankLoginButton", "retrieve movebank data"),
                                        
-                                     ),
+                                    ) ),
                                 column(4,
+                                       tags$div(class="box", 
                                        h3(strong('Reload Existing Project')),
                                        p("Select the button below to continue working on an existing Movebank project."),
                                        shinyDirButton('loadProjectButton', 'Reload Existing Project Folder', title='Reload Existing Project Folder'),
                                        
                                        #actionButton("loadProjectButton", "Reload Existing Project Folder"),
                                        
-                                       )),
+                                       ))),
                     column(12,
                            uiOutput("importSuccessText"),
                            uiOutput("importSuccessOverview"),
@@ -300,7 +315,7 @@ ui <-
           }
         ")),
           
-          
+  
           
           # Define a div with glide screens for various steps in the data cleaning process
           
@@ -317,7 +332,7 @@ ui <-
                        class = "padded-screen",
                        h3(strong("Step 1: Choose Working Directory")),
                        div(
-                       style = "max-height: 200px; overflow-y: auto;",  # Set the max-height and enable vertical scrolling if necessary
+                       style = "max-height: 10px;",  # Set the max-height and enable vertical scrolling if necessary
                                      div(class = "my-control", uiOutput("workingDirectoryTitle")),
                                      div(class = "my-control", uiOutput("chooseWorkingDirButton")),
                                      div(class = "my-control", uiOutput("selectedWorkingDirectoryLabel"))
@@ -404,7 +419,7 @@ ui <-
                     ),
                     column(8,align="right",
                            tags$div(
-                             style = "max-height: 300px; max-width: 1200px; overflow: auto;",
+                             style = "max-height: 400px; max-width: 1200px; overflow: auto;",
                              
                              #style = "max-height: 500px; overflow-y: scroll;",
                              tableOutput("dateConfigTable1")
@@ -457,7 +472,13 @@ ui <-
                                                actionButton("processDatesButton", "PROCESS DATES")
                                         ),
                                         column(12,
-                                               tableOutput("dateConfigTable2")
+                                               tags$div(
+                                                 style = "max-height: 400px; max-width: 1200px; overflow: auto;",
+                                                 
+                                                 #style = "max-height: 500px; overflow-y: scroll;",
+                                                 tableOutput("dateConfigTable2")
+                                               ) 
+                                               #tableOutput("dateConfigTable2")
                                         ))
              
              

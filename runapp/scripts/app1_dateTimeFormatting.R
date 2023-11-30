@@ -39,7 +39,7 @@ showDateTimeSelectionPanel<-function(){
   selectedDateColumns<-NULL
   
   if ("timestamp" %in% names(importedDatasetMaster@data)) {
-    updateCheckboxGroupInput(session, "dateColumnSelector", choices=uniqueColumns, selected = "timestamp")
+    updateCheckboxGroupInput(session, "dateColumnSelector", choices=uniqueColumns, selected = "timestamp",inline=TRUE)
   } else{
     
   updateCheckboxGroupInput(session,

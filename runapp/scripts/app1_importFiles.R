@@ -247,8 +247,8 @@ showColumnChoiceInfo<-function(){
     updateSelectInput(session, "speciesSelector", choices = c("", 'NaN', columnNames), selected = "taxon_canonical_name")
   } 
   
-  if ("individual_id" %in% columnNames) {
-    updateSelectInput(session, "uniqueIdSelector", choices = c("", 'NaN', columnNames), selected = "individual_id")
+  if ("local_identifier" %in% columnNames) {
+    updateSelectInput(session, "uniqueIdSelector", choices = c("", 'NaN', columnNames), selected = "local_identifier")
   }
   
   # output$uniqueIdSelectorGo<-renderUI({
